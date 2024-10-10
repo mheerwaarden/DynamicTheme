@@ -17,9 +17,13 @@
 
 package com.github.mheerwaarden.dynamictheme.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -32,14 +36,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
+import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
+import com.github.mheerwaarden.dynamictheme.ui.PreferencesViewModel
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
 
@@ -98,6 +107,7 @@ private fun HomeBody(
     navigateToColorExtractor: () -> Unit,
     navigateToExamples: () -> Unit,
     modifier: Modifier = Modifier,
+    preferencesViewModel: PreferencesViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -106,6 +116,44 @@ private fun HomeBody(
         ),
         modifier = modifier
     ) {
+        Text("The current theme colors")
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(height = dimensionResource(id = R.dimen.padding_large))
+                .background(color = Color(preferencesViewModel.preferencesState.collectAsState().value.sourceColor))
+        ) { Text("Source color") }
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimensionResource(id = R.dimen.padding_minimum))
+        ) {
+            Box(
+                Modifier
+                    .background(color = MaterialTheme.colorScheme.primary)
+                    .height(height = dimensionResource(id = R.dimen.padding_large))
+            ) { Text("Primary") }
+            Box(
+                Modifier
+                    .background(color = MaterialTheme.colorScheme.secondary)
+                    .height(height = dimensionResource(id = R.dimen.padding_large))
+            ) { Text("Secondary") }
+            Box(
+                Modifier
+                    .background(color = MaterialTheme.colorScheme.tertiary)
+                    .height(height = dimensionResource(id = R.dimen.padding_large))
+            ) { Text("Tertiary") }
+            Box(
+                Modifier
+                    .background(color = MaterialTheme.colorScheme.surface)
+                    .height(height = dimensionResource(id = R.dimen.padding_large))
+            ) { Text("Surface") }
+            Box(
+                Modifier
+                    .background(color = MaterialTheme.colorScheme.background)
+                    .height(height = dimensionResource(id = R.dimen.padding_large))
+            ) { Text("Background") }
+        }
         Button(
             onClick = navigateToPalette,
             modifier = Modifier.fillMaxWidth()

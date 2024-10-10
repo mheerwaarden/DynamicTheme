@@ -10,16 +10,13 @@
     <string name="photo_picker">Photo picker</string>
     <string name="browse">Browse</string>
     <string name="palette_for_image">Palette for image</string>
-    <string name="vibrant">Vibrant %s</string>
-    <string name="dark_muted">Dark Muted: %s</string>
-    <string name="dark_vibrant">Dark Vibrant: %s</string>
-    <string name="light_vibrant">Light Vibrant: %s</string>
-    <string name="light_muted">Light Muted: %s</string>
-    <string name="muted">Muted: %s</string>
+    <string name="vibrant">Vibrant</string>
+    <string name="dark_muted">Dark Muted</string>
+    <string name="dark_vibrant">Dark Vibrant</string>
+    <string name="light_vibrant">Light Vibrant</string>
+    <string name="light_muted">Light Muted</string>
+    <string name="muted">Muted</string>
     <string name="no_color">No %s color</string>
-    <string name="rgb">RGB: %s</string>
-    <string name="title">Title: %s</string>
-    <string name="body">Body: %s</string>
     <string name="color_extractor_for_image">Color extractor for image</string>
     <string name="set_color_scheme">Set color scheme</string>
 </resources>

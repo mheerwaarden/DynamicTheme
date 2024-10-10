@@ -70,6 +70,8 @@ dependencies {
     // Coil -- AsycImage
     implementation(libs.coil.compose)
 
+    // Datastore
+    implementation(libs.androidx.datastore.preferences)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

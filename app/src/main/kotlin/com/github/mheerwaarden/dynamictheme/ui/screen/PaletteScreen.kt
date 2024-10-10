@@ -116,29 +116,6 @@ fun PaletteScreen(
                 canNavigateBack = true,
                 navigateUp = navigateBack
             )
-        }, floatingActionButton = {
-            val noColorText = stringResource(
-                R.string.no_color,
-                stringResource(R.string.vibrant, "")
-            )
-            FloatingActionButton(
-                onClick = {
-                    if (uiState.vibrant != null) {
-                        val colorScheme = createDynamicColorScheme(uiState.vibrant.rgb)
-                        onChangeColorScheme(colorScheme)
-                    } else {
-                        Toast.makeText(context, noColorText, Toast.LENGTH_SHORT).show()
-                    }
-                },
-                shape = MaterialTheme.shapes.medium,
-                modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_large))
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Colorize,
-                    contentDescription = stringResource(R.string.set_color_scheme),
-                )
-            }
-
         }, modifier = modifier
     ) { innerPadding ->
         PaletteBody(
