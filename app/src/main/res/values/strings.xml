@@ -19,4 +19,10 @@
     <string name="no_color">No %s color</string>
     <string name="color_extractor_for_image">Color extractor for image</string>
     <string name="set_color_scheme">Set color scheme</string>
+    <string name="first">First</string>
+    <string name="second">Second</string>
+    <string name="third">Third</string>
+    <string name="fourth">fourth</string>
+    <string name="fifth">Fifth</string>
+    <string name="sixth">Sixth</string>
 </resources>

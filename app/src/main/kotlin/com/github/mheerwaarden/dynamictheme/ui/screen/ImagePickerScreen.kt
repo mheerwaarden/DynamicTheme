@@ -18,13 +18,12 @@
 package com.github.mheerwaarden.dynamictheme.ui.screen
 
 import android.net.Uri
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
-import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,28 +33,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Colorize
 import androidx.compose.material.icons.filled.ImageSearch
-import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -64,9 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
@@ -81,48 +73,62 @@ import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
 import dynamiccolor.DynamicScheme
 
-object PaletteDestination : NavigationDestination {
-    override val route = "palette"
-    override val titleRes = R.string.palette_for_image
-}
-
-object ColorExtractorDestination : NavigationDestination {
-    override val route = "color_extractor"
+object ImagePickerDestination : NavigationDestination {
+    override val route = "image_picker"
     override val titleRes = R.string.color_extractor_for_image
-}
-
-enum class ColorExtractionStrategy {
-    Palette, ColorExtractor
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaletteScreen(
+fun ImagePickerScreen(
     windowSizeClass: WindowSizeClass,
-    @StringRes titleResId: Int,
-    colorExtractionStrategy: ColorExtractionStrategy,
     onChangeColorScheme: (DynamicScheme) -> Unit,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: PaletteViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    viewModel: ImagePickerViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val context = LocalContext.current
-    val uiState = viewModel.uiState.value
+    val uiState = viewModel.uiState
+
+    // [GetContent] is an ActivityResultContract that will launch a browser for the filter
+    // specified in the launch call
+    val browseImageLauncher =
+            rememberLauncherForActivityResult(GetContent()) { uri ->
+                if (uri != null) {
+                    viewModel.updateImageUri(uri)
+                    viewModel.updateSwatches(context, uri)
+                }
+            }
 
     Scaffold(
         topBar = {
             DynamicThemeTopAppBar(
-                title = stringResource(titleResId),
+                title = stringResource(ImagePickerDestination.titleRes),
                 canNavigateBack = true,
-                navigateUp = navigateBack
+                navigateUp = navigateBack,
+                actions = {
+                    Icon(
+                        imageVector = Icons.Default.ImageSearch,
+                        contentDescription = stringResource(R.string.image_picker),
+                        modifier = Modifier.clickable { browseImageLauncher.launch("image/*") }
+                    )
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors().copy(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    scrolledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         }, modifier = modifier
     ) { innerPadding ->
-        PaletteBody(
+        ImagePickerBody(
             uiState = uiState,
             isCompactWidth = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact,
             onSelectImage = { uri ->
-                viewModel.updateUiState(context, uri, colorExtractionStrategy)
+                viewModel.updateImageUri(uri)
+                viewModel.updateSwatches(context, uri)
             },
             onChangeColorScheme = onChangeColorScheme,
             modifier = Modifier
@@ -133,7 +139,7 @@ fun PaletteScreen(
 }
 
 @Composable
-private fun PaletteBody(
+private fun ImagePickerBody(
     uiState: ImagePickerUiState,
     isCompactWidth: Boolean,
     onSelectImage: (Uri) -> Unit,
@@ -149,7 +155,7 @@ private fun PaletteBody(
             ),
             modifier = modifier.fillMaxSize()
         ) {
-            ImagePicker(onSelectImage, modifier = Modifier.weight(1f))
+            ImagePicker(uiState.imageUri, onSelectImage, modifier = Modifier.weight(1f))
             HorizontalDivider()
             Swatches(
                 uiState = uiState,
@@ -165,7 +171,7 @@ private fun PaletteBody(
             ),
             modifier = modifier.fillMaxSize()
         ) {
-            ImagePicker(onSelectImage, modifier = Modifier.weight(1f))
+            ImagePicker(uiState.imageUri, onSelectImage, modifier = Modifier.weight(1f))
             VerticalDivider()
             Swatches(
                 uiState = uiState,
@@ -182,6 +188,18 @@ fun Swatches(
     onChangeColorScheme: (DynamicScheme) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    Row(modifier = modifier.fillMaxWidth()) {
+        SwatchesColumn(uiState.paletteSwatches, onChangeColorScheme, modifier.weight(1f))
+        SwatchesColumn(uiState.colorExtractionSwatches, onChangeColorScheme, modifier.weight(1f))
+    }
+}
+
+@Composable
+fun SwatchesColumn(
+    swatches: List<Swatch>,
+    onChangeColorScheme: (DynamicScheme) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(
@@ -190,173 +208,87 @@ fun Swatches(
         ),
         modifier = modifier
     ) {
-        item {
+        items(swatches) { swatch ->
             SwatchButton(
-                labelResID = R.string.vibrant,
-                swatch = uiState.vibrant,
+                swatch = swatch,
                 onChangeColorScheme = onChangeColorScheme
             )
         }
-        item {
-            SwatchButton(
-                labelResID = R.string.dark_muted,
-                swatch = uiState.darkMuted,
-                onChangeColorScheme = onChangeColorScheme
-            )
-        }
-        item {
-            SwatchButton(
-                labelResID = R.string.dark_vibrant,
-                swatch = uiState.darkVibrant,
-                onChangeColorScheme = onChangeColorScheme
-            )
-        }
-        item {
-            SwatchButton(
-                labelResID = R.string.light_vibrant,
-                swatch = uiState.lightVibrant,
-                onChangeColorScheme = onChangeColorScheme
-            )
-        }
-        item {
-            SwatchButton(
-                labelResID = R.string.light_muted,
-                swatch = uiState.lightMuted,
-                onChangeColorScheme = onChangeColorScheme
-            )
-        }
-        item {
-            SwatchButton(
-                labelResID = R.string.muted,
-                swatch = uiState.muted,
-                onChangeColorScheme = onChangeColorScheme
-            )
-        }
+
     }
 }
 
 @Composable
 fun SwatchButton(
-    swatch: Swatch?,
-    @StringRes labelResID: Int,
+    swatch: Swatch,
     onChangeColorScheme: (DynamicScheme) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (swatch == null) {
-        Button(
-            onClick = { /* Do nothing */ },
-            enabled = false,
-            modifier = modifier
-                .padding(horizontal = dimensionResource(id = R.dimen.padding_small))
-                .fillMaxWidth()
+    val buttonText = buildAnnotatedString {
+        withStyle(
+            style = MaterialTheme.typography.bodySmall
+                .copy(color = Color(swatch.titleTextColor))
+                .toSpanStyle()
         ) {
-            Text(
-                text = stringResource(
-                    R.string.no_color,
-                    stringResource(labelResID, "")
-                ), modifier = Modifier.fillMaxWidth()
-            )
-        }
-    } else {
-        val buttonText = buildAnnotatedString {
-            withStyle(
-                style = SpanStyle(
-                    color = Color(swatch.titleTextColor),
-                    fontWeight = FontWeight.Bold
-                )
-            ) {
-                append(stringResource(labelResID, ""))
-            }
-
-            withStyle(style = SpanStyle(color = Color(swatch.bodyTextColor))) {
-                append(": ")
-                append(swatch.rgb.hexString())
-            }
+            append(stringResource(swatch.labelResID))
         }
 
-        Button(
-            onClick = {
-                val colorScheme = createDynamicColorScheme(swatch.rgb)
-                onChangeColorScheme(colorScheme)
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(swatch.rgb)),
-            modifier = modifier
-                .padding(horizontal = dimensionResource(id = R.dimen.padding_small))
-                .fillMaxWidth()
-        ) { Text(buttonText) }
+        withStyle(
+            style = MaterialTheme.typography.labelSmall
+                .copy(color = Color(swatch.bodyTextColor))
+                .toSpanStyle()
+        ) {
+            append(": ")
+            append(swatch.rgb.hexString())
+        }
     }
+
+    Button(
+        onClick = {
+            val colorScheme = createDynamicColorScheme(swatch.rgb)
+            onChangeColorScheme(colorScheme)
+        },
+        colors = ButtonDefaults.buttonColors(containerColor = Color(swatch.rgb)),
+        modifier = modifier
+            .padding(horizontal = dimensionResource(id = R.dimen.padding_small))
+            .fillMaxWidth()
+    ) { Text(buttonText) }
 }
 
 @Composable
-private fun ImagePicker(onSelectImage: (Uri) -> Unit, modifier: Modifier = Modifier) {
-    var selectedImageUri by rememberSaveable { mutableStateOf(Uri.EMPTY) }
-
+private fun ImagePicker(
+    selectedImageUri: Uri,
+    onSelectImage: (Uri) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     /** [PickVisualMedia] is an ActivityResultContract that will launch the photo picker intent */
     val photoPickerLauncher =
             rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
                 if (uri != null) {
-                    selectedImageUri = uri
                     onSelectImage(uri)
                 }
             }
 
-    /** [GetContent] is an ActivityResultContract that will launch a browser for the given filter */
-    val browseImageLauncher =
-            rememberLauncherForActivityResult(GetContent()) { uri ->
-                if (uri != null) {
-                    selectedImageUri = uri
-                    onSelectImage(uri)
-                }
-            }
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Row(horizontalArrangement = Arrangement.SpaceAround) {
-            Button(
-                onClick = { photoPickerLauncher.launch(PickVisualMediaRequest()) },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = dimensionResource(R.dimen.padding_small))
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Photo,
-                    contentDescription = stringResource(R.string.image_picker),
-                )
-                Text(stringResource(R.string.photo_picker))
-            }
-            Button(
-                onClick = { browseImageLauncher.launch("image/*") },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = dimensionResource(R.dimen.padding_small))
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ImageSearch,
-                    contentDescription = stringResource(R.string.image_picker),
-                )
-                Text(stringResource(R.string.browse))
-            }
-        }
-        if (selectedImageUri == Uri.EMPTY) {
-            // Question mark icon
-            Image(
-                painter = painterResource(id = R.drawable.indeterminate_question_box),
-                contentDescription = stringResource(R.string.no_image_selected),
-                contentScale = ContentScale.Fit,
-                modifier = modifier.sizeIn(minWidth = 250.dp, minHeight = 250.dp)
-            )
-        } else {
-            AsyncImage(
-                model = selectedImageUri,
-                contentDescription = stringResource(R.string.selected_image),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .aspectRatio(1f)
-                    .sizeIn(minWidth = 250.dp, minHeight = 250.dp),
-            )
-        }
+    if (selectedImageUri == Uri.EMPTY) {
+        // Question mark icon
+        Image(
+            painter = painterResource(id = R.drawable.indeterminate_question_box),
+            contentDescription = stringResource(R.string.no_image_selected),
+            contentScale = ContentScale.Fit,
+            modifier = modifier
+                .sizeIn(minWidth = 250.dp, minHeight = 250.dp)
+                .clickable { photoPickerLauncher.launch(PickVisualMediaRequest()) }
+        )
+    } else {
+        AsyncImage(
+            model = selectedImageUri,
+            contentDescription = stringResource(R.string.selected_image),
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .aspectRatio(1f)
+                .sizeIn(minWidth = 250.dp, minHeight = 250.dp)
+                .clickable { photoPickerLauncher.launch(PickVisualMediaRequest()) },
+        )
     }
 }
 
@@ -376,10 +308,8 @@ fun ImagePickerScreenPreview() {
                 height = 880.dp
             )
         )
-        PaletteScreen(
+        ImagePickerScreen(
             windowSizeClass = windowSizeClass,
-            titleResId = PaletteDestination.titleRes,
-            colorExtractionStrategy = ColorExtractionStrategy.Palette,
             onChangeColorScheme = {},
             navigateBack = {}
         )

@@ -63,8 +63,7 @@ object HomeDestination : NavigationDestination {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    navigateToPalette: () -> Unit,
-    navigateToColorExtractor: () -> Unit,
+    navigateToImagePicker: () -> Unit,
     navigateToExamples: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -81,7 +80,7 @@ fun HomeScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = navigateToPalette,
+                onClick = navigateToImagePicker,
                 shape = MaterialTheme.shapes.medium,
                 modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_large))
             ) {
@@ -93,8 +92,7 @@ fun HomeScreen(
         },
     ) { innerPadding ->
         HomeBody(
-            navigateToPalette = navigateToPalette,
-            navigateToColorExtractor = navigateToColorExtractor,
+            navigateToImagePicker = navigateToImagePicker,
             navigateToExamples = navigateToExamples,
             modifier = Modifier.padding(innerPadding)
         )
@@ -103,8 +101,7 @@ fun HomeScreen(
 
 @Composable
 private fun HomeBody(
-    navigateToPalette: () -> Unit,
-    navigateToColorExtractor: () -> Unit,
+    navigateToImagePicker: () -> Unit,
     navigateToExamples: () -> Unit,
     modifier: Modifier = Modifier,
     preferencesViewModel: PreferencesViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -155,11 +152,7 @@ private fun HomeBody(
             ) { Text("Background") }
         }
         Button(
-            onClick = navigateToPalette,
-            modifier = Modifier.fillMaxWidth()
-        ) { Text(stringResource(R.string.palette_for_image)) }
-        Button(
-            onClick = navigateToColorExtractor,
+            onClick = navigateToImagePicker,
             modifier = Modifier.fillMaxWidth()
         ) { Text(stringResource(R.string.color_extractor_for_image)) }
         Button(
@@ -174,8 +167,7 @@ private fun HomeBody(
 fun HomeBodyPreview() {
     DynamicThemeTheme {
         HomeBody(
-            navigateToPalette = {},
-            navigateToColorExtractor = {},
+            navigateToImagePicker = {},
             navigateToExamples = {}
         )
     }

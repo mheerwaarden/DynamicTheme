@@ -18,6 +18,7 @@
 package com.github.mheerwaarden.dynamictheme
 
 import android.util.Log
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -25,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -119,6 +121,8 @@ fun DynamicThemeTopAppBar(
     modifier: Modifier = Modifier,
     scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
     navigateUp: () -> Unit = {},
+    actions: @Composable() (RowScope.() -> Unit) = {},
+    colors: TopAppBarColors = TopAppBarDefaults.centerAlignedTopAppBarColors(),
 ) {
     CenterAlignedTopAppBar(
         title = { Text(title) },
@@ -133,6 +137,8 @@ fun DynamicThemeTopAppBar(
                     )
                 }
             }
-        }
+        },
+        actions = actions,
+        colors = colors
     )
 }

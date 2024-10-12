@@ -21,11 +21,15 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import contrast.Contrast
 import dynamiccolor.DynamicScheme
 import hct.Hct
 import quantize.QuantizerCelebi
 import scheme.SchemeTonalSpot
 import score.Score
+import utils.ColorUtils
 
 /*
 The Java code from https://github.com/material-foundation/material-color-utilities/blob/main/ is
@@ -276,4 +280,13 @@ object ColorExtractor {
         return pixels
     }
 
+    fun getContrastColor(color: Int): Int {
+        val tone1 = ColorUtils.lstarFromArgb(color)
+        val toneWhite = ColorUtils.lstarFromArgb(Color.White.toArgb())
+        val contrastRatioWhite = Contrast.ratioOfTones(tone1, toneWhite)
+        val toneBlack = ColorUtils.lstarFromArgb(Color.Black.toArgb())
+        val contrastRatioBlack = Contrast.ratioOfTones(tone1, toneBlack)
+        return if (contrastRatioWhite > contrastRatioBlack) Color.White.toArgb() else Color.Black.toArgb()
+    }
 }
+

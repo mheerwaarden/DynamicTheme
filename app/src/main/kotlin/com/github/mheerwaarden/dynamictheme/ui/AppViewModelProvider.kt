@@ -23,11 +23,11 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.github.mheerwaarden.dynamictheme.DynamicThemeApplication
-import com.github.mheerwaarden.dynamictheme.ui.screen.PaletteViewModel
+import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerViewModel
 
 object AppViewModelProvider {
     val Factory = viewModelFactory {
-        initializer { PaletteViewModel() }
+        initializer { ImagePickerViewModel() }
         initializer { PreferencesViewModel(dynamicThemeApplication().userPreferencesRepository) }
     }
 }

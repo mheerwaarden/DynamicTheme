@@ -25,12 +25,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeDestination
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeScreen
-import com.github.mheerwaarden.dynamictheme.ui.screen.ColorExtractionStrategy
-import com.github.mheerwaarden.dynamictheme.ui.screen.ColorExtractorDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.ExamplesDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.ExamplesScreen
-import com.github.mheerwaarden.dynamictheme.ui.screen.PaletteDestination
-import com.github.mheerwaarden.dynamictheme.ui.screen.PaletteScreen
+import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerDestination
+import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerScreen
 import dynamiccolor.DynamicScheme
 
 /**
@@ -49,24 +47,13 @@ fun DynamicThemeNavHost(
     ) {
         composable(route = HomeDestination.route) {
             HomeScreen(
-                navigateToPalette = { navController.navigate(PaletteDestination.route) },
-                navigateToColorExtractor = { navController.navigate(ColorExtractorDestination.route) },
+                navigateToImagePicker = { navController.navigate(ImagePickerDestination.route) },
                 navigateToExamples = { navController.navigate(ExamplesDestination.route) }
             )
         }
-        composable(route = PaletteDestination.route) {
-            PaletteScreen(
+        composable(route = ImagePickerDestination.route) {
+            ImagePickerScreen(
                 windowSizeClass = windowSizeClass,
-                titleResId = PaletteDestination.titleRes,
-                colorExtractionStrategy = ColorExtractionStrategy.Palette,
-                onChangeColorScheme = onChangeColorScheme,
-                navigateBack = { navController.popBackStack() })
-        }
-        composable(route = ColorExtractorDestination.route) {
-            PaletteScreen(
-                windowSizeClass = windowSizeClass,
-                titleResId = ColorExtractorDestination.titleRes,
-                colorExtractionStrategy = ColorExtractionStrategy.ColorExtractor,
                 onChangeColorScheme = onChangeColorScheme,
                 navigateBack = { navController.popBackStack() })
         }
