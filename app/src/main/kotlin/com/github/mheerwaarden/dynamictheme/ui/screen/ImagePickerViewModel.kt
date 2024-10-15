@@ -74,7 +74,7 @@ class ImagePickerViewModel : ViewModel() {
     }
 
     private fun getSwatchForColor(index: Int, color: Int): Swatch {
-        val contrastColor = ColorExtractor.getContrastColor(color)
+        val contrastColor = ColorExtractor.getContrastColorRgb(color)
         return Swatch(COLOR_EXTRACTION_SWATCHES[index], color, contrastColor, contrastColor)
     }
 

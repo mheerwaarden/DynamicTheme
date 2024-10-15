@@ -25,4 +25,9 @@
     <string name="fourth">fourth</string>
     <string name="fifth">Fifth</string>
     <string name="sixth">Sixth</string>
+    <string name="on_color">On %s</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
+    <string name="scheme_colors">Scheme Colors</string>
+    <string name="component_showcase">Component Showcase</string>
 </resources>

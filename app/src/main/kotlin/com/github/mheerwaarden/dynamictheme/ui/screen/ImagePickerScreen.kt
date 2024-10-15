@@ -303,10 +303,7 @@ fun ImagePickerScreenPreview() {
     DynamicThemeTheme {
         val windowSizeClass = WindowSizeClass.calculateFromSize(
             // Compact width, normal mobile phone
-            DpSize(
-                width = 580.dp,
-                height = 880.dp
-            )
+            DpSize(width = 580.dp, height = 880.dp)
         )
         ImagePickerScreen(
             windowSizeClass = windowSizeClass,

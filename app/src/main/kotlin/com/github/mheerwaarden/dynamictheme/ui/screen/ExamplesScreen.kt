@@ -17,18 +17,18 @@
 
 package com.github.mheerwaarden.dynamictheme.ui.screen
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
@@ -54,8 +54,8 @@ fun ExamplesScreen(
             )
         }, modifier = modifier
     ) { innerPadding ->
-        ExamplesBody(
-            isCompactWidth = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact,
+        ThemeShowcaseScreen(
+            windowSizeClass = windowSizeClass,
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
@@ -63,9 +63,11 @@ fun ExamplesScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun ExamplesBody(isCompactWidth: Boolean, modifier: Modifier = Modifier) {
-    Box(contentAlignment = Alignment.Center, modifier = modifier) {
-        Text(text = "No Examples Yet")
-    }
+@Preview(showBackground = true)
+fun ExamplesScreenPreview() {
+    ExamplesScreen(
+        windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(580.dp, 880.dp)),
+        navigateBack = {})
 }

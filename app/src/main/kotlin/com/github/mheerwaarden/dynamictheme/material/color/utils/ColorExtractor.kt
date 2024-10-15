@@ -230,7 +230,13 @@ Conversions between color spaces (color_spaces.md)
 
 private const val QUATIZE_SIZE = 128
 
+private const val WHITE = 0xFFFFFF
+private const val BLACK = 0x000000
+
 object ColorExtractor {
+
+    private val toneWhite = ColorUtils.lstarFromArgb(WHITE)
+    private val toneBlack = ColorUtils.lstarFromArgb(BLACK)
 
     /**
      * @param uri The path to an image
@@ -280,13 +286,19 @@ object ColorExtractor {
         return pixels
     }
 
-    fun getContrastColor(color: Int): Int {
-        val tone1 = ColorUtils.lstarFromArgb(color)
-        val toneWhite = ColorUtils.lstarFromArgb(Color.White.toArgb())
+    fun getContrastColorRgb(colorRgb: Int): Int {
+        val tone1 = ColorUtils.lstarFromArgb(colorRgb)
         val contrastRatioWhite = Contrast.ratioOfTones(tone1, toneWhite)
-        val toneBlack = ColorUtils.lstarFromArgb(Color.Black.toArgb())
         val contrastRatioBlack = Contrast.ratioOfTones(tone1, toneBlack)
-        return if (contrastRatioWhite > contrastRatioBlack) Color.White.toArgb() else Color.Black.toArgb()
+        return if (contrastRatioWhite > contrastRatioBlack) WHITE else BLACK
     }
+
+    fun getContrastColor(color: Color): Color {
+        val tone1 = ColorUtils.lstarFromArgb(color.toArgb())
+        val contrastRatioWhite = Contrast.ratioOfTones(tone1, toneWhite)
+        val contrastRatioBlack = Contrast.ratioOfTones(tone1, toneBlack)
+        return if (contrastRatioWhite > contrastRatioBlack) Color.White else Color.Black
+    }
+
 }
 

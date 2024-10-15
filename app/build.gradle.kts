@@ -28,15 +28,29 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
     }
+}
+
+composeCompiler {
+    // Strong skipping mode allows composables with unstable parameters to be skipped
+    enableStrongSkippingMode = true
+
+    // Compiler output results of its stability inference for inspection
+    // See https://developer.android.com/develop/ui/compose/performance/stability/diagnose
+    reportsDestination = layout.buildDirectory.dir("compose_compiler")
+    metricsDestination = layout.buildDirectory.dir("compose_compiler")
+
+    // To mark classes or packages as stable, you can add them in the stability configuration file.
+    // See https://developer.android.com/develop/ui/compose/performance/stability/fix#configuration-file
+    // stabilityConfigurationFile = rootProject.layout.projectDirectory.file("stability_config.conf")
 }
 
 dependencies {
