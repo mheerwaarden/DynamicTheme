@@ -23,6 +23,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferences
 import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferencesRepository
+import dynamiccolor.Variant
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -42,10 +43,10 @@ class PreferencesViewModel(
                 initialValue = UserPreferences()
             )
 
-    fun setSourceColorPreference(color: Int) {
+    fun setSourceColorPreference(color: Int, schemeVariant: Variant) {
         Log.d(APP_TAG, "Setting source color preference: $color")
         viewModelScope.launch {
-            userPreferencesRepository.saveSourceColorPreference(color)
+            userPreferencesRepository.saveSourceColorPreference(color, schemeVariant)
             Log.d(APP_TAG, "Saved source color preference: $color")
         }
     }

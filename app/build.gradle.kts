@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.github.mheerwaarden.dynamictheme"
-        minSdk = 24
+        minSdk = 26 // Android 8.0 = Build.VERSION_CODES.O
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"

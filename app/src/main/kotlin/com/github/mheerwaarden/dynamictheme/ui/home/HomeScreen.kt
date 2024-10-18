@@ -21,12 +21,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -37,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,10 +47,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
+import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferences
+import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferencesRepository
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.PreferencesViewModel
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
+import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
+import dynamiccolor.Variant
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 object HomeDestination : NavigationDestination {
     override val route = "home"
@@ -63,7 +69,9 @@ object HomeDestination : NavigationDestination {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    updateColorScheme: (Int, UiColorSchemeVariant) -> Unit,
     navigateToImagePicker: () -> Unit,
+    navigateToThemeChooser: () -> Unit,
     navigateToExamples: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -85,14 +93,16 @@ fun HomeScreen(
                 modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_large))
             ) {
                 Icon(
-                    imageVector = Icons.Default.Menu,
+                    imageVector = Icons.Default.ColorLens,
                     contentDescription = stringResource(R.string.menu)
                 )
             }
         },
     ) { innerPadding ->
         HomeBody(
+            updateColorScheme = updateColorScheme,
             navigateToImagePicker = navigateToImagePicker,
+            navigateToThemeChooser = navigateToThemeChooser,
             navigateToExamples = navigateToExamples,
             modifier = Modifier.padding(innerPadding)
         )
@@ -101,11 +111,15 @@ fun HomeScreen(
 
 @Composable
 private fun HomeBody(
+    updateColorScheme: (Int, UiColorSchemeVariant) -> Unit,
     navigateToImagePicker: () -> Unit,
+    navigateToThemeChooser: () -> Unit,
     navigateToExamples: () -> Unit,
     modifier: Modifier = Modifier,
     preferencesViewModel: PreferencesViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
+    val preferencesState by preferencesViewModel.preferencesState.collectAsState()
+    updateColorScheme(preferencesState.sourceColor, preferencesState.getUiColorSchemeVariant())
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(
@@ -113,48 +127,24 @@ private fun HomeBody(
         ),
         modifier = modifier
     ) {
-        Text("The current theme colors")
+        Text(
+            "The current source color with theme " +
+                    stringResource(preferencesState.getUiColorSchemeVariant().nameResId)
+        )
         Box(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .height(height = dimensionResource(id = R.dimen.padding_large))
-                .background(color = Color(preferencesViewModel.preferencesState.collectAsState().value.sourceColor))
-        ) { Text("Source color") }
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = dimensionResource(id = R.dimen.padding_minimum))
-        ) {
-            Box(
-                Modifier
-                    .background(color = MaterialTheme.colorScheme.primary)
-                    .height(height = dimensionResource(id = R.dimen.padding_large))
-            ) { Text("Primary") }
-            Box(
-                Modifier
-                    .background(color = MaterialTheme.colorScheme.secondary)
-                    .height(height = dimensionResource(id = R.dimen.padding_large))
-            ) { Text("Secondary") }
-            Box(
-                Modifier
-                    .background(color = MaterialTheme.colorScheme.tertiary)
-                    .height(height = dimensionResource(id = R.dimen.padding_large))
-            ) { Text("Tertiary") }
-            Box(
-                Modifier
-                    .background(color = MaterialTheme.colorScheme.surface)
-                    .height(height = dimensionResource(id = R.dimen.padding_large))
-            ) { Text("Surface") }
-            Box(
-                Modifier
-                    .background(color = MaterialTheme.colorScheme.background)
-                    .height(height = dimensionResource(id = R.dimen.padding_large))
-            ) { Text("Background") }
-        }
+                .height(height = dimensionResource(id = R.dimen.colorbox_height))
+                .background(color = Color(preferencesState.sourceColor))
+        )
         Button(
             onClick = navigateToImagePicker,
             modifier = Modifier.fillMaxWidth()
         ) { Text(stringResource(R.string.color_extractor_for_image)) }
+        Button(
+            onClick = navigateToThemeChooser,
+            modifier = Modifier.fillMaxWidth()
+        ) { Text(stringResource(R.string.color_scheme_variant_chooser)) }
         Button(
             onClick = navigateToExamples,
             modifier = Modifier.fillMaxWidth()
@@ -167,8 +157,22 @@ private fun HomeBody(
 fun HomeBodyPreview() {
     DynamicThemeTheme {
         HomeBody(
+            updateColorScheme = { _, _ -> },
             navigateToImagePicker = {},
-            navigateToExamples = {}
+            navigateToThemeChooser = {},
+            navigateToExamples = {},
+            preferencesViewModel = PreferencesViewModel(object : UserPreferencesRepository {
+                override val preferences: Flow<UserPreferences>
+                    get() = emptyFlow()
+
+                override suspend fun saveSourceColorPreference(
+                    color: Int,
+                    colorSchemeVariant: Variant,
+                ) {
+                    // Nothing to do
+                }
+
+            })
         )
     }
 }

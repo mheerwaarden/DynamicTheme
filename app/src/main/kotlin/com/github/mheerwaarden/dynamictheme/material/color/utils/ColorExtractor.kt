@@ -25,9 +25,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import contrast.Contrast
 import dynamiccolor.DynamicScheme
+import dynamiccolor.Variant
 import hct.Hct
 import quantize.QuantizerCelebi
+import scheme.SchemeContent
+import scheme.SchemeExpressive
+import scheme.SchemeFidelity
+import scheme.SchemeFruitSalad
+import scheme.SchemeMonochrome
+import scheme.SchemeNeutral
+import scheme.SchemeRainbow
 import scheme.SchemeTonalSpot
+import scheme.SchemeVibrant
 import score.Score
 import utils.ColorUtils
 
@@ -266,9 +275,23 @@ object ColorExtractor {
         return Score.score(quantizerResult)
     }
 
-    fun createDynamicColorScheme(argb: Int): DynamicScheme {
-        val hct = Hct.fromInt(argb)
-        return SchemeTonalSpot(hct, false, 0.0)
+    fun createDynamicColorScheme(
+        sourceArgb: Int,
+        schemeVariant: Variant,
+        isDark: Boolean,
+    ): DynamicScheme {
+        val hct = Hct.fromInt(sourceArgb)
+        return when (schemeVariant) {
+            Variant.CONTENT -> SchemeContent(hct, isDark, 0.0)
+            Variant.EXPRESSIVE -> SchemeExpressive(hct, isDark, 0.0)
+            Variant.FIDELITY -> SchemeFidelity(hct, isDark, 0.0)
+            Variant.FRUIT_SALAD -> SchemeFruitSalad(hct, isDark, 0.0)
+            Variant.MONOCHROME -> SchemeMonochrome(hct, isDark, 0.0)
+            Variant.NEUTRAL -> SchemeNeutral(hct, isDark, 0.0)
+            Variant.RAINBOW -> SchemeRainbow(hct, isDark, 0.0)
+            Variant.TONAL_SPOT -> SchemeTonalSpot(hct, isDark, 0.0)
+            Variant.VIBRANT -> SchemeVibrant(hct, isDark, 0.0)
+        }
     }
 
     /**
@@ -286,8 +309,8 @@ object ColorExtractor {
         return pixels
     }
 
-    fun getContrastColorRgb(colorRgb: Int): Int {
-        val tone1 = ColorUtils.lstarFromArgb(colorRgb)
+    fun getContrastColorArgb(colorArgb: Int): Int {
+        val tone1 = ColorUtils.lstarFromArgb(colorArgb)
         val contrastRatioWhite = Contrast.ratioOfTones(tone1, toneWhite)
         val contrastRatioBlack = Contrast.ratioOfTones(tone1, toneBlack)
         return if (contrastRatioWhite > contrastRatioBlack) WHITE else BLACK

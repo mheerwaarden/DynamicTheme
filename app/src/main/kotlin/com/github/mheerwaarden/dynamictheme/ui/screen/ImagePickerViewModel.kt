@@ -26,56 +26,59 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
-import kotlinx.coroutines.launch
 
+/**
+ * View model for the [ImagePickerScreen] containing the URI of the selected image and the swatches
+ * for the colors that are extracted from the image.
+ */
 class ImagePickerViewModel : ViewModel() {
     var uiState by mutableStateOf(ImagePickerUiState())
         private set
 
-    fun updateImageUri(uri: Uri) {
-        uiState = uiState.copy(imageUri = uri)
+    /**
+     * Update the state by setting the URI of the selected image and extracting the swatches for
+     * the colors in the image.
+     */
+    fun updateState(context: Context, uri: Uri) {
+        uiState = uiState.copy(
+            imageUri = uri,
+            paletteSwatches = getPaletteSwatches(context, uri),
+            colorExtractionSwatches = getColorExtractionSwatches(context, uri)
+        )
     }
 
-    fun updateSwatches(
-        context: Context,
-        uri: Uri,
-    ) {
-        viewModelScope.launch {
-            updatePaletteSwatches(context, uri)
-            updateColorExtractionSwatches(context, uri)
-        }
-    }
-
-    private fun updatePaletteSwatches(context: Context, uri: Uri) {
+    private fun getPaletteSwatches(context: Context, uri: Uri): List<UiSwatch> {
         val bitmap: Bitmap =
                 context.contentResolver.openInputStream(uri).use { inputStream ->
                     BitmapFactory.decodeStream(inputStream)
                 }
         val palette = Palette.from(bitmap).generate()
-        val swatches = listOfNotNull(
-            palette.vibrantSwatch?.let { Swatch(R.string.vibrant, it) },
-            palette.darkVibrantSwatch?.let { Swatch(R.string.dark_vibrant, it) },
-            palette.lightVibrantSwatch?.let { Swatch(R.string.light_vibrant, it) },
-            palette.lightMutedSwatch?.let { Swatch(R.string.light_muted, it) },
-            palette.mutedSwatch?.let { Swatch(R.string.muted, it) },
-            palette.darkMutedSwatch?.let { Swatch(R.string.dark_muted, it) },
+        return listOfNotNull(
+            palette.vibrantSwatch?.let { UiSwatch(R.string.vibrant, it) },
+            palette.darkVibrantSwatch?.let { UiSwatch(R.string.dark_vibrant, it) },
+            palette.lightVibrantSwatch?.let { UiSwatch(R.string.light_vibrant, it) },
+            palette.lightMutedSwatch?.let { UiSwatch(R.string.light_muted, it) },
+            palette.mutedSwatch?.let { UiSwatch(R.string.muted, it) },
+            palette.darkMutedSwatch?.let { UiSwatch(R.string.dark_muted, it) },
         )
-        uiState = uiState.copy(paletteSwatches = swatches)
     }
 
-    private fun updateColorExtractionSwatches(context: Context, uri: Uri) {
+    private fun getColorExtractionSwatches(context: Context, uri: Uri): List<UiSwatch> {
         val colors = ColorExtractor.extractColorsFromImage(context, uri)
-        val swatches = colors.mapIndexed { index, color -> getSwatchForColor(index, color) }
-        uiState = uiState.copy(colorExtractionSwatches = swatches)
+        return colors.mapIndexed { index, color -> getSwatchForColor(index, color) }
     }
 
-    private fun getSwatchForColor(index: Int, color: Int): Swatch {
-        val contrastColor = ColorExtractor.getContrastColorRgb(color)
-        return Swatch(COLOR_EXTRACTION_SWATCHES[index], color, contrastColor, contrastColor)
+    private fun getSwatchForColor(index: Int, color: Int): UiSwatch {
+        val contrastColor = ColorExtractor.getContrastColorArgb(color)
+        return UiSwatch(
+            labelResID = COLOR_EXTRACTION_SWATCHES[index],
+            argb = color,
+            titleTextColor = contrastColor,
+            bodyTextColor = contrastColor
+        )
     }
 
 }
@@ -90,17 +93,28 @@ private val COLOR_EXTRACTION_SWATCHES = listOf(
 )
 
 data class ImagePickerUiState(
+    /** The URI of the selected image. */
     val imageUri: Uri = Uri.EMPTY,
-    val paletteSwatches: List<Swatch> = emptyList(),
-    val colorExtractionSwatches: List<Swatch> = emptyList(),
+    /** The swatches for the colors that are extracted from the image using the Palette. */
+    val paletteSwatches: List<UiSwatch> = emptyList(),
+    /** The swatches for the colors that are extracted from the image using the ColorExtractor. */
+    val colorExtractionSwatches: List<UiSwatch> = emptyList(),
 )
 
-data class Swatch(
+/**
+ * Data class representing a swatch for a color.
+ */
+data class UiSwatch(
+    /** The string resource ID for the label of the swatch. */
     @StringRes val labelResID: Int,
-    val rgb: Int,
+    /** The ARGB value of the swatch. */
+    val argb: Int,
+    /** The title text color of the swatch. This color has sufficient contrast with [argb]. */
     val titleTextColor: Int,
+    /** The body text color of the swatch. This color has sufficient contrast with [argb]. */
     val bodyTextColor: Int,
 ) {
+    /** Create a swatch from a [Palette.Swatch] that was generated from a bitmap. */
     constructor(@StringRes labelResID: Int, palette: Palette.Swatch) : this(
         labelResID,
         palette.rgb,

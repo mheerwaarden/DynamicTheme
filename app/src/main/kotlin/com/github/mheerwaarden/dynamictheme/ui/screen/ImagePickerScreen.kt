@@ -67,22 +67,44 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
-import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor.createDynamicColorScheme
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
-import dynamiccolor.DynamicScheme
 
 object ImagePickerDestination : NavigationDestination {
     override val route = "image_picker"
     override val titleRes = R.string.color_extractor_for_image
 }
 
+/**
+ * Select an image to extract colors from. Clicking the image will launch the photo picker. The top
+ * bar has an icon that will launch the browser to select an image. This allows the user to select
+ * images that are not stored in image folders, e.g. the download folder.
+ * Colors are extracted in two different ways:
+ * 1. Palette colors from the bitmap
+ * 2. Color extraction by the material color library
+ * Each set of colors has its own column that shows the extracted colors.
+ * On the click of a color, the next [ColorSchemeVariantChooserScreen] step is activated to allow the user to
+ * select a color scheme based on the selected color.
+ *
+ * @param themeState The current state of the theme selection.
+ * @param windowSizeClass The current window size class. On a compact width, the image is above the
+ * columns, otherwise they will be side by side.
+ * @param onUpdateColorScheme The callback to invoke when to update the color scheme is updated when
+ * a color is selected.
+ * @param navigateToThemeChooser The callback to invoke to go to the next screen.
+ * @param navigateBack The callback to invoke when the user clicks the back button.
+ * @param modifier Modifier to be applied to the screen.
+ * @param viewModel The view model for this screen, containing the swatches for the colors that are
+ * extracted from the image.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagePickerScreen(
+    themeState: DynamicThemeUiState,
     windowSizeClass: WindowSizeClass,
-    onChangeColorScheme: (DynamicScheme) -> Unit,
+    onUpdateColorScheme: (Int, UiColorSchemeVariant) -> Unit,
+    navigateToThemeChooser: () -> Unit,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ImagePickerViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -95,8 +117,7 @@ fun ImagePickerScreen(
     val browseImageLauncher =
             rememberLauncherForActivityResult(GetContent()) { uri ->
                 if (uri != null) {
-                    viewModel.updateImageUri(uri)
-                    viewModel.updateSwatches(context, uri)
+                    viewModel.updateState(context, uri)
                 }
             }
 
@@ -127,10 +148,12 @@ fun ImagePickerScreen(
             uiState = uiState,
             isCompactWidth = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact,
             onSelectImage = { uri ->
-                viewModel.updateImageUri(uri)
-                viewModel.updateSwatches(context, uri)
+                viewModel.updateState(context, uri)
             },
-            onChangeColorScheme = onChangeColorScheme,
+            onSelectColor = { color ->
+                onUpdateColorScheme(color, themeState.uiColorSchemeVariant)
+                navigateToThemeChooser()
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -143,7 +166,7 @@ private fun ImagePickerBody(
     uiState: ImagePickerUiState,
     isCompactWidth: Boolean,
     onSelectImage: (Uri) -> Unit,
-    onChangeColorScheme: (DynamicScheme) -> Unit,
+    onSelectColor: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (isCompactWidth) {
@@ -159,7 +182,7 @@ private fun ImagePickerBody(
             HorizontalDivider()
             Swatches(
                 uiState = uiState,
-                onChangeColorScheme = onChangeColorScheme,
+                onSelectColor = onSelectColor,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -175,7 +198,7 @@ private fun ImagePickerBody(
             VerticalDivider()
             Swatches(
                 uiState = uiState,
-                onChangeColorScheme = onChangeColorScheme,
+                onSelectColor = onSelectColor,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -185,19 +208,19 @@ private fun ImagePickerBody(
 @Composable
 fun Swatches(
     uiState: ImagePickerUiState,
-    onChangeColorScheme: (DynamicScheme) -> Unit,
+    onSelectColor: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier.fillMaxWidth()) {
-        SwatchesColumn(uiState.paletteSwatches, onChangeColorScheme, modifier.weight(1f))
-        SwatchesColumn(uiState.colorExtractionSwatches, onChangeColorScheme, modifier.weight(1f))
+        SwatchesColumn(uiState.paletteSwatches, onSelectColor, modifier.weight(1f))
+        SwatchesColumn(uiState.colorExtractionSwatches, onSelectColor, modifier.weight(1f))
     }
 }
 
 @Composable
 fun SwatchesColumn(
-    swatches: List<Swatch>,
-    onChangeColorScheme: (DynamicScheme) -> Unit,
+    swatches: List<UiSwatch>,
+    onSelectColor: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -209,10 +232,7 @@ fun SwatchesColumn(
         modifier = modifier
     ) {
         items(swatches) { swatch ->
-            SwatchButton(
-                swatch = swatch,
-                onChangeColorScheme = onChangeColorScheme
-            )
+            SwatchButton(swatch = swatch, onSelectColor = onSelectColor)
         }
 
     }
@@ -220,8 +240,8 @@ fun SwatchesColumn(
 
 @Composable
 fun SwatchButton(
-    swatch: Swatch,
-    onChangeColorScheme: (DynamicScheme) -> Unit,
+    swatch: UiSwatch,
+    onSelectColor: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val buttonText = buildAnnotatedString {
@@ -239,16 +259,13 @@ fun SwatchButton(
                 .toSpanStyle()
         ) {
             append(": ")
-            append(swatch.rgb.hexString())
+            append(swatch.argb.hexString())
         }
     }
 
     Button(
-        onClick = {
-            val colorScheme = createDynamicColorScheme(swatch.rgb)
-            onChangeColorScheme(colorScheme)
-        },
-        colors = ButtonDefaults.buttonColors(containerColor = Color(swatch.rgb)),
+        onClick = { onSelectColor(swatch.argb) },
+        colors = ButtonDefaults.buttonColors(containerColor = Color(swatch.argb)),
         modifier = modifier
             .padding(horizontal = dimensionResource(id = R.dimen.padding_small))
             .fillMaxWidth()
@@ -276,7 +293,10 @@ private fun ImagePicker(
             contentDescription = stringResource(R.string.no_image_selected),
             contentScale = ContentScale.Fit,
             modifier = modifier
-                .sizeIn(minWidth = 250.dp, minHeight = 250.dp)
+                .sizeIn(
+                    minWidth = dimensionResource(R.dimen.image_size),
+                    minHeight = dimensionResource(R.dimen.image_size)
+                )
                 .clickable { photoPickerLauncher.launch(PickVisualMediaRequest()) }
         )
     } else {
@@ -286,15 +306,16 @@ private fun ImagePicker(
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .aspectRatio(1f)
-                .sizeIn(minWidth = 250.dp, minHeight = 250.dp)
+                .sizeIn(
+                    minWidth = dimensionResource(R.dimen.image_size),
+                    minHeight = dimensionResource(R.dimen.image_size)
+                )
                 .clickable { photoPickerLauncher.launch(PickVisualMediaRequest()) },
         )
     }
 }
 
-private fun Int.hexString(): String {
-    return String.format("#%06X", (0xFFFFFF and this))
-}
+private fun Int.hexString(): String = String.format("#%06X", (0xFFFFFF and this))
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview(showBackground = true)
@@ -306,8 +327,10 @@ fun ImagePickerScreenPreview() {
             DpSize(width = 580.dp, height = 880.dp)
         )
         ImagePickerScreen(
+            themeState = DynamicThemeUiState(),
             windowSizeClass = windowSizeClass,
-            onChangeColorScheme = {},
+            onUpdateColorScheme = { _, _ -> },
+            navigateToThemeChooser = {},
             navigateBack = {}
         )
     }

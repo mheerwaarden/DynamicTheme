@@ -55,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -62,17 +63,112 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
+import com.github.mheerwaarden.dynamictheme.ui.ColorSchemeState
+import com.github.mheerwaarden.dynamictheme.ui.component.DateField
+import com.github.mheerwaarden.dynamictheme.ui.component.InputField
+import com.github.mheerwaarden.dynamictheme.ui.component.TimeField
+import com.github.mheerwaarden.dynamictheme.ui.fromColorSchemeState
+import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
+import com.github.mheerwaarden.dynamictheme.ui.theme.getDefaultColorScheme
+import com.github.mheerwaarden.dynamictheme.ui.toColorSchemeState
+import palettes.TonalPalette
+import java.time.LocalDateTime
 
-// Data class to represent a color with its name
-data class ColorItem(val name: String, val color: Color, val onColor: Color? = null)
+/**
+ * Data class to represent a color with its name.
+ * If the [onColor] is not provided, the contrast color will be used. This is white or black,
+ * depending on which one gives the best contrast.
+ */
+data class ColorItem(
+    /** The name for the color */
+    val name: String,
+    /** The color itself */
+    val color: Color,
+    /** The color to use on top of the [color] */
+    val onColor: Color? = null,
+)
+
+@Composable
+fun ThemeShowcaseScreen(
+    windowSizeClass: WindowSizeClass,
+    modifier: Modifier = Modifier,
+    lightColorSchemeState: ColorSchemeState = getDefaultColorScheme(
+        darkTheme = false, dynamicColor = false
+    ).toColorSchemeState(),
+    darkColorSchemeState: ColorSchemeState = getDefaultColorScheme(
+        darkTheme = true, dynamicColor = false
+    ).toColorSchemeState(),
+) {
+    DynamicThemeTheme(colorScheme = fromColorSchemeState(lightColorSchemeState)) {
+        ExpandableSections(
+            sections = listOf(
+                stringResource(R.string.light_scheme) to {
+                    ColorSchemeShowcaseScreen(windowSizeClass)
+                },
+                stringResource(R.string.dark_scheme) to {
+                    DarkColorSchemeShowcaseScreen(darkColorSchemeState, windowSizeClass)
+                },
+                stringResource(R.string.components) to { ComponentShowcaseScreen() },
+                stringResource(R.string.tonal_palettes) to {
+                    TonalPaletteShowcaseScreen(windowSizeClass)
+                }
+            ), modifier = modifier.fillMaxSize()
+        )
+    }
+}
+
+@Composable
+fun ExpandableSections(
+    sections: List<Pair<String, @Composable () -> Unit>>,
+    modifier: Modifier = Modifier,
+) {
+    var expandedSectionIndex by remember { mutableIntStateOf(0) }
+
+    Column(modifier = modifier) {
+        sections.forEachIndexed { index, (title, content) ->
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
+                .clickable {
+                    expandedSectionIndex = if (expandedSectionIndex == index) -1 else index
+                }
+                .padding(dimensionResource(R.dimen.padding_small))) {
+                Text(title)
+                Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
+                ExpandCollapseIcon(isExpanded = expandedSectionIndex == index)
+            }
+
+            AnimatedVisibility(
+                visible = expandedSectionIndex == index, modifier = Modifier.weight(1f)
+            ) {
+                content()
+            }
+        }
+    }
+}
+
+@Composable
+fun ExpandCollapseIcon(isExpanded: Boolean, modifier: Modifier = Modifier) {
+    if (isExpanded) {
+        // Collapse icon
+        Icon(
+            imageVector = Icons.Filled.ArrowDropUp,
+            contentDescription = stringResource(R.string.collapse),
+            modifier = modifier
+        )
+    } else {
+        // Expand icon
+        Icon(
+            imageVector = Icons.Filled.ArrowDropDown,
+            contentDescription = stringResource(R.string.expand),
+            modifier = modifier
+        )
+    }
+}
 
 @Composable
 fun ColorSchemeShowcaseScreen(windowSizeClass: WindowSizeClass, modifier: Modifier = Modifier) {
     Column(
         modifier.padding(dimensionResource(R.dimen.padding_small))
     ) {
-        Text(stringResource(R.string.scheme_colors), style = MaterialTheme.typography.titleSmall)
-        Spacer(Modifier.height(8.dp))
         ColorGrid(
             colorsLayout = colorsLayout(),
             isCompactWidth = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact,
@@ -80,15 +176,31 @@ fun ColorSchemeShowcaseScreen(windowSizeClass: WindowSizeClass, modifier: Modifi
     }
 }
 
+/**
+ * Dark theme version of [ColorSchemeShowcaseScreen] by surrounding the call with the
+ * [DynamicThemeTheme] set to the dark color scheme.
+ */
+@Composable
+fun DarkColorSchemeShowcaseScreen(
+    darkColorScheme: ColorSchemeState,
+    windowSizeClass: WindowSizeClass,
+    modifier: Modifier = Modifier,
+) {
+    DynamicThemeTheme(colorScheme = fromColorSchemeState(darkColorScheme)) {
+        ColorSchemeShowcaseScreen(windowSizeClass, modifier)
+    }
+}
+
+/**
+ * The colors of the color scheme in a list of rows, each row defined by a list of [ColorItem]
+ */
 @Composable
 private fun colorsLayout() = listOf(
     listOf(
         ColorItem(
             "Primary", MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary
         ), ColorItem(
-            "Secondary",
-            MaterialTheme.colorScheme.secondary,
-            MaterialTheme.colorScheme.onSecondary
+            "Secondary", MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.onSecondary
         ), ColorItem(
             "Tertiary", MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.onTertiary
         ), ColorItem(
@@ -260,34 +372,33 @@ private fun ColorBox(
             .padding(dimensionResource(R.dimen.padding_very_small))
     ) {
         Text(
-            text = text,
-            color = textColor,
-            fontSize = MaterialTheme.typography.labelSmall.fontSize
+            text = text, color = textColor, fontSize = MaterialTheme.typography.labelSmall.fontSize
         )
     }
 }
 
 @Composable
-fun ComponentShowcaseScreen() {
+fun ComponentShowcaseScreen(
+    colorScheme: ColorSchemeState = getDefaultColorScheme(
+        darkTheme = false, dynamicColor = false
+    ).toColorSchemeState(),
+) {
     LazyColumn(
         Modifier
             .fillMaxSize()
             .padding(dimensionResource(R.dimen.padding_small))
     ) {
         item {
-            Text(
-                stringResource(R.string.component_showcase),
-                style = MaterialTheme.typography.titleSmall
-            )
-            Spacer(Modifier.height(dimensionResource(R.dimen.padding_small)))
-
             // Progress Bar
             LinearProgressIndicator(
-                Modifier
+                color = Color(colorScheme.primary),
+                trackColor = Color(colorScheme.secondaryContainer),
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(dimensionResource(R.dimen.padding_small))
             )
-
+        }
+        item {
             // Buttons
             Row {
                 Button(onClick = { /* dummy */ }) { Text("Primary") }
@@ -296,83 +407,83 @@ fun ComponentShowcaseScreen() {
                 Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
                 TextButton(onClick = { /* dummy */ }) { Text("Text") }
             }
-
+        }
+        item {
             // List Item
             ListItem(headlineContent = { Text("List Item") },
                 leadingContent = { Icon(Icons.Filled.Check, contentDescription = null) })
-
+        }
+        item {
             // Floating Action Button
             FloatingActionButton(onClick = { /* dummy */ }) {
                 Icon(Icons.Filled.Add, contentDescription = null)
             }
-
-            // TODO MH: ... add other components ...
         }
-    }
-}
-
-@Composable
-fun ExpandableSections(
-    sections: List<Pair<String, @Composable () -> Unit>>,
-    modifier: Modifier = Modifier,
-) {
-    var expandedSectionIndex by remember { mutableIntStateOf(0) }
-
-    Column(modifier = modifier) {
-        sections.forEachIndexed { index, (title, content) ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier
-                .clickable {
-                    expandedSectionIndex = if (expandedSectionIndex == index) -1 else index
-                }
-                .padding(dimensionResource(R.dimen.padding_small))
-            ) {
-                Text(title)
-                Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
-                ExpandCollapseIcon(isExpanded = expandedSectionIndex == index)
-            }
-
-            AnimatedVisibility(
-                visible = expandedSectionIndex == index,
-                modifier = Modifier.weight(1f)
-            ) {
-                content()
-            }
-        }
-    }
-}
-
-@Composable
-fun ExpandCollapseIcon(isExpanded: Boolean, modifier: Modifier = Modifier) {
-    if (isExpanded) {
-        // Collapse icon
-        Icon(
-            imageVector = Icons.Filled.ArrowDropUp,
-            contentDescription = stringResource(R.string.collapse),
-            modifier = modifier
-        )
-    } else {
-        // Expand icon
-        Icon(
-            imageVector = Icons.Filled.ArrowDropDown,
-            contentDescription = stringResource(R.string.expand),
-            modifier = modifier
-        )
-    }
-}
-
-@Composable
-fun ThemeShowcaseScreen(
-    windowSizeClass: WindowSizeClass,
-    modifier: Modifier = Modifier,
-) {
-    ExpandableSections(
-        sections = listOf("Scheme Showcase" to {
-            ColorSchemeShowcaseScreen(
-                windowSizeClass
+        item {
+            InputField(
+                labelId = R.string.text_input,
+                value = "Text input value",
+                singleLine = false,
+                onValueChange = { /* dummy */ },
+                modifier = Modifier.fillMaxWidth(),
             )
-        }, "Component Showcase" to { ComponentShowcaseScreen() }),
-        modifier = modifier.fillMaxSize()
-    )
+        }
+        item {
+            DateField(
+                currentDate = LocalDateTime.now(),
+                onDateChange = { /* dummy */ },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        item {
+            TimeField(
+                currentTime = LocalDateTime.now(),
+                onTimeChange = { _, _, _ -> /* dummy */ },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        // TODO MH: ... add other components ... OutlineButton
+
+    }
+}
+
+@Composable
+fun getTonalPaletteColors() = mapOf(
+    stringResource(R.string.primary) to TonalPalette.fromInt(MaterialTheme.colorScheme.primary.toArgb()),
+    stringResource(R.string.secondary) to TonalPalette.fromInt(MaterialTheme.colorScheme.secondary.toArgb()),
+    stringResource(R.string.tertiary) to TonalPalette.fromInt(MaterialTheme.colorScheme.tertiary.toArgb()),
+    stringResource(R.string.neutral) to TonalPalette.fromInt(MaterialTheme.colorScheme.surface.toArgb()),
+    stringResource(R.string.neutral_variant) to TonalPalette.fromInt(MaterialTheme.colorScheme.surfaceVariant.toArgb()),
+    stringResource(R.string.error) to TonalPalette.fromInt(MaterialTheme.colorScheme.error.toArgb()),
+)
+
+@Composable
+fun TonalPaletteShowcaseScreen(windowSizeClass: WindowSizeClass, modifier: Modifier = Modifier) {
+    val isCompactWidth = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
+    val tonalPaletteColors = getTonalPaletteColors()
+    LazyColumn(modifier = modifier.fillMaxSize()) {
+        tonalPaletteColors.forEach { (name, tonalPalette) ->
+            item {
+                Text(
+                    name, style = MaterialTheme.typography.titleSmall
+                )
+            }
+            item {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    for (tone in 100 downTo 0 step 5) {
+                        val color = Color(tonalPalette.tone(tone))
+                        if (isCompactWidth) ColorBox(color, color, "", Modifier.weight(1f))
+                        else {
+                            val onColor = ColorExtractor.getContrastColor(color)
+                            ColorBox(onColor, color, tone.toString(), Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+            item { Spacer(Modifier.height(dimensionResource(R.dimen.padding_small))) }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -381,9 +492,7 @@ fun ThemeShowcaseScreen(
 fun ColorShowcaseScreenPreview() {
     val windowSizeClass = WindowSizeClass.calculateFromSize(
         // Compact width, normal mobile phone
-        DpSize(
-            width = 580.dp, height = 880.dp
-        )
+        DpSize(width = 580.dp, height = 880.dp)
     )
     ColorSchemeShowcaseScreen(windowSizeClass)
 }
@@ -391,7 +500,16 @@ fun ColorShowcaseScreenPreview() {
 @Preview(showBackground = true)
 @Composable
 fun ComponentShowcaseScreenPreview() {
-    ComponentShowcaseScreen()
+    DynamicThemeTheme {
+        ComponentShowcaseScreen()
+    }
+}
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Preview(showBackground = true)
+@Composable
+fun TonalPaletteScreenPreview() {
+    TonalPaletteShowcaseScreen(WindowSizeClass.calculateFromSize(DpSize(580.dp, 880.dp)))
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -400,11 +518,14 @@ fun ComponentShowcaseScreenPreview() {
 fun ThemeShowcaseScreenPreview() {
     val windowSizeClass = WindowSizeClass.calculateFromSize(
         // Compact width, normal mobile phone
-        DpSize(
-            width = 580.dp, height = 880.dp
+        DpSize(width = 580.dp, height = 880.dp)
+    )
+    DynamicThemeTheme {
+        ThemeShowcaseScreen(
+            lightColorSchemeState = getDefaultColorScheme(
+                darkTheme = true, dynamicColor = false
+            ).toColorSchemeState(),
+            windowSizeClass = windowSizeClass,
         )
-    )
-    ThemeShowcaseScreen(
-        windowSizeClass = windowSizeClass,
-    )
+    }
 }

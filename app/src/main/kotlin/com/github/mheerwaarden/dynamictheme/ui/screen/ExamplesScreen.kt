@@ -17,9 +17,13 @@
 
 package com.github.mheerwaarden.dynamictheme.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -41,7 +45,9 @@ object ExamplesDestination : NavigationDestination {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExamplesScreen(
+    themeState: DynamicThemeUiState,
     windowSizeClass: WindowSizeClass,
+    navigateHome: () -> Unit,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -50,12 +56,21 @@ fun ExamplesScreen(
             DynamicThemeTopAppBar(
                 title = stringResource(ExamplesDestination.titleRes),
                 canNavigateBack = true,
-                navigateUp = navigateBack
+                navigateUp = navigateBack,
+                actions = {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = stringResource(R.string.home),
+                        modifier = Modifier.clickable(onClick = navigateHome)
+                    )
+                },
             )
         }, modifier = modifier
     ) { innerPadding ->
         ThemeShowcaseScreen(
             windowSizeClass = windowSizeClass,
+            lightColorSchemeState = themeState.lightColorSchemeState,
+            darkColorSchemeState = themeState.darkColorSchemeState,
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
@@ -68,6 +83,9 @@ fun ExamplesScreen(
 @Preview(showBackground = true)
 fun ExamplesScreenPreview() {
     ExamplesScreen(
+        themeState = DynamicThemeUiState(),
         windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(580.dp, 880.dp)),
-        navigateBack = {})
+        navigateHome = {},
+        navigateBack = {}
+    )
 }

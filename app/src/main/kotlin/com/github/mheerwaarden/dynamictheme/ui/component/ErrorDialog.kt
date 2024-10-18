@@ -15,16 +15,23 @@
  * limitations under the License.
  */
 
-package com.github.mheerwaarden.dynamictheme.data.preferences
+package com.github.mheerwaarden.dynamictheme.ui.component
 
-import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
-import dynamiccolor.Variant
+import android.app.AlertDialog
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.github.mheerwaarden.dynamictheme.R
 
-data class UserPreferences(
-    val sourceColor: Int = -0xbd7a0c, // Default to Google Blue
-    val dynamicSchemeVariant: Variant = Variant.TONAL_SPOT,
+@Composable
+fun ErrorDialog(
+    errorMessage: String,
+    onDismiss: () -> Unit,
 ) {
-    fun getUiColorSchemeVariant(): UiColorSchemeVariant =
-            UiColorSchemeVariant.entries[dynamicSchemeVariant.ordinal]
-
+    val context = LocalContext.current
+    val builder = AlertDialog.Builder(context)
+    builder.setTitle(R.string.attention)
+        .setMessage(stringResource(R.string.an_error_occurred, errorMessage))
+    builder.setPositiveButton(R.string.ok) { _, _ -> onDismiss() }
+    builder.show()
 }

@@ -17,10 +17,11 @@
 
 package com.github.mheerwaarden.dynamictheme.data.preferences
 
+import dynamiccolor.Variant
 import kotlinx.coroutines.flow.Flow
 
 interface UserPreferencesRepository {
     val preferences: Flow<UserPreferences>
 
-    suspend fun saveSourceColorPreference(color: Int)
+    suspend fun saveSourceColorPreference(color: Int, colorSchemeVariant: Variant)
 }

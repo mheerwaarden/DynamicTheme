@@ -19,17 +19,24 @@ package com.github.mheerwaarden.dynamictheme.ui.navigation
 
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeDestination
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeScreen
+import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeViewModel
 import com.github.mheerwaarden.dynamictheme.ui.screen.ExamplesDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.ExamplesScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerScreen
-import dynamiccolor.DynamicScheme
+import com.github.mheerwaarden.dynamictheme.ui.screen.ColorSchemeVariantDestination
+import com.github.mheerwaarden.dynamictheme.ui.screen.ColorSchemeVariantChooserScreen
+import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 
 /**
  * Provides Navigation graph for the application.
@@ -37,30 +44,56 @@ import dynamiccolor.DynamicScheme
 @Composable
 fun DynamicThemeNavHost(
     navController: NavHostController,
-    onChangeColorScheme: (DynamicScheme) -> Unit,
+    onChangeColorScheme: (Int, UiColorSchemeVariant) -> Unit,
     windowSizeClass: WindowSizeClass,
     modifier: Modifier = Modifier,
     startDestination: String = HomeDestination.route,
+    themeViewModel: DynamicThemeViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
+    val themeState by themeViewModel.uiState.collectAsState()
+
     NavHost(
         navController = navController, startDestination = startDestination, modifier = modifier
     ) {
         composable(route = HomeDestination.route) {
             HomeScreen(
+                updateColorScheme = themeViewModel::updateColorScheme,
                 navigateToImagePicker = { navController.navigate(ImagePickerDestination.route) },
+                navigateToThemeChooser = { navController.navigate(ColorSchemeVariantDestination.route) },
                 navigateToExamples = { navController.navigate(ExamplesDestination.route) }
             )
         }
         composable(route = ImagePickerDestination.route) {
             ImagePickerScreen(
+                themeState = themeState,
                 windowSizeClass = windowSizeClass,
-                onChangeColorScheme = onChangeColorScheme,
-                navigateBack = { navController.popBackStack() })
+                onUpdateColorScheme = { sourceColorArgb, uiColorSchemeVariant ->
+                    themeViewModel.updateColorScheme(sourceColorArgb, uiColorSchemeVariant)
+                    onChangeColorScheme(sourceColorArgb, uiColorSchemeVariant)
+                },
+                navigateToThemeChooser = { navController.navigate(ColorSchemeVariantDestination.route) },
+                navigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(route = ColorSchemeVariantDestination.route) {
+            ColorSchemeVariantChooserScreen(
+                themeState = themeState,
+                windowSizeClass = windowSizeClass,
+                onUpdateTheme = { sourceColorArgb, uiColorSchemeVariant ->
+                    themeViewModel.updateColorScheme(sourceColorArgb, uiColorSchemeVariant)
+                    onChangeColorScheme(sourceColorArgb, uiColorSchemeVariant)
+                },
+                navigateToExamples = { navController.navigate(ExamplesDestination.route) },
+                navigateBack = { navController.popBackStack() }
+            )
         }
         composable(route = ExamplesDestination.route) {
             ExamplesScreen(
+                themeState = themeState,
                 windowSizeClass = windowSizeClass,
-                navigateBack = { navController.popBackStack() })
+                navigateHome = { navController.navigate(HomeDestination.route) },
+                navigateBack = { navController.popBackStack() }
+            )
         }
     }
 }

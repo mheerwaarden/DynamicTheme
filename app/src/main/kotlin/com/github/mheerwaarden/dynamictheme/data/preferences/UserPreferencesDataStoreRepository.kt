@@ -24,6 +24,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import com.github.mheerwaarden.dynamictheme.APP_TAG
+import dynamiccolor.Variant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -34,8 +35,11 @@ private const val TAG = APP_TAG + "UserPreferencesRepo"
 class UserPreferencesDataStoreRepository(
     private val dataStore: DataStore<Preferences>,
 ) : UserPreferencesRepository {
-    override suspend fun saveSourceColorPreference(color: Int) {
-        dataStore.edit { preferences -> preferences[SOURCE_COLOR] = color }
+    override suspend fun saveSourceColorPreference(color: Int, colorSchemeVariant: Variant) {
+        dataStore.edit { preferences ->
+            preferences[SOURCE_COLOR] = color
+            preferences[COLOR_SCHEME_VARIANT] = colorSchemeVariant.ordinal
+        }
     }
 
     override val preferences: Flow<UserPreferences> = dataStore.data
@@ -50,11 +54,14 @@ class UserPreferencesDataStoreRepository(
             Log.d(TAG, "preferences: $settings")
             UserPreferences(
                 sourceColor = settings[SOURCE_COLOR] ?: UserPreferences().sourceColor,
+                dynamicSchemeVariant = Variant.entries[settings[COLOR_SCHEME_VARIANT]
+                        ?: UserPreferences().dynamicSchemeVariant.ordinal]
             )
 
         }
 
     private companion object {
         val SOURCE_COLOR = intPreferencesKey("source_color")
+        val COLOR_SCHEME_VARIANT = intPreferencesKey("color_scheme_variant")
     }
 }
