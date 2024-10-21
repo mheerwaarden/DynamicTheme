@@ -53,6 +53,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -246,17 +247,15 @@ fun SwatchButton(
 ) {
     val buttonText = buildAnnotatedString {
         withStyle(
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall.toSpanStyle()
                 .copy(color = Color(swatch.titleTextColor))
-                .toSpanStyle()
         ) {
             append(stringResource(swatch.labelResID))
         }
 
         withStyle(
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelSmall.toSpanStyle()
                 .copy(color = Color(swatch.bodyTextColor))
-                .toSpanStyle()
         ) {
             append(": ")
             append(swatch.argb.hexString())
@@ -265,7 +264,12 @@ fun SwatchButton(
 
     Button(
         onClick = { onSelectColor(swatch.argb) },
-        colors = ButtonDefaults.buttonColors(containerColor = Color(swatch.argb)),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(swatch.argb),
+            contentColor = Color(swatch.titleTextColor),
+            disabledContainerColor = Color(swatch.argb),
+            disabledContentColor = Color(swatch.bodyTextColor)
+        ),
         modifier = modifier
             .padding(horizontal = dimensionResource(id = R.dimen.padding_small))
             .fillMaxWidth()
@@ -335,3 +339,26 @@ fun ImagePickerScreenPreview() {
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun SwatchesPreview() {
+    val white = Color.White.toArgb()
+    val black = Color.Black.toArgb()
+    val blue = Color.Blue.toArgb()
+    val red = Color.Red.toArgb()
+    val green = Color.Green.toArgb()
+    val yellow = Color.Yellow.toArgb()
+    val uiState = ImagePickerUiState(
+        paletteSwatches = listOf(
+            UiSwatch(R.string.vibrant, blue, white, white),
+            UiSwatch(R.string.dark_vibrant, red, white, white)
+        ),
+        colorExtractionSwatches = listOf(
+            UiSwatch(R.string.first, green, black, black),
+            UiSwatch(R.string.second, yellow, black, black)
+        )
+    )
+    Swatches(uiState = uiState, onSelectColor = {})
+}
+
