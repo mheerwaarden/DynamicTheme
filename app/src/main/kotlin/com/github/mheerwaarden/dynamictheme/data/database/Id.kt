@@ -15,17 +15,9 @@
  * limitations under the License.
  */
 
-package com.github.mheerwaarden.dynamictheme.data.preferences
+package com.github.mheerwaarden.dynamictheme.data.database
 
-import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
-import dynamiccolor.Variant
-
-data class UserPreferences(
-    val id: Long = -1L,
-    val name: String = "",
-    val sourceColor: Int = -0xbd7a0c, // Default to Google Blue
-    val dynamicSchemeVariant: Variant = Variant.TONAL_SPOT,
-    val uiColorSchemeVariant: UiColorSchemeVariant = UiColorSchemeVariant.fromVariant(
-        dynamicSchemeVariant
-    ),
+/** Partial class to allow 'by id' methods on Dao objects */
+data class Id(
+    val id: Long,
 )

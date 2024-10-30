@@ -17,16 +17,15 @@
 
 package com.github.mheerwaarden.dynamictheme.ui.home
 
-import androidx.compose.foundation.background
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ColorLens
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -39,24 +38,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
-import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferences
-import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferencesRepository
+import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
-import com.github.mheerwaarden.dynamictheme.ui.PreferencesViewModel
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
-import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
+import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeUiState
+import com.github.mheerwaarden.dynamictheme.ui.screen.ThemeCard
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
-import dynamiccolor.Variant
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 
 object HomeDestination : NavigationDestination {
     override val route = "home"
@@ -69,12 +64,13 @@ object HomeDestination : NavigationDestination {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    updateColorScheme: (Int, UiColorSchemeVariant) -> Unit,
+    themeState: DynamicThemeUiState,
     navigateToImagePicker: () -> Unit,
-    navigateToThemeChooser: () -> Unit,
-    navigateToExamples: () -> Unit,
+    navigateToDetail: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    homeViewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
+    val uiState by homeViewModel.uiState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
@@ -93,86 +89,81 @@ fun HomeScreen(
                 modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_large))
             ) {
                 Icon(
-                    imageVector = Icons.Default.ColorLens,
-                    contentDescription = stringResource(R.string.menu)
+                    imageVector = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.add_theme)
                 )
             }
         },
     ) { innerPadding ->
-        HomeBody(
-            updateColorScheme = updateColorScheme,
-            navigateToImagePicker = navigateToImagePicker,
-            navigateToThemeChooser = navigateToThemeChooser,
-            navigateToExamples = navigateToExamples,
+        HomeListScreen(
+            themeState = themeState,
+            dynamicThemeList = uiState,
+            navigateToDetail = navigateToDetail,
             modifier = Modifier.padding(innerPadding)
         )
     }
 }
 
 @Composable
-private fun HomeBody(
-    updateColorScheme: (Int, UiColorSchemeVariant) -> Unit,
-    navigateToImagePicker: () -> Unit,
-    navigateToThemeChooser: () -> Unit,
-    navigateToExamples: () -> Unit,
+private fun HomeListScreen(
+    themeState: DynamicThemeUiState,
+    dynamicThemeList: List<DynamicTheme>,
+    navigateToDetail: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    preferencesViewModel: PreferencesViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
-    val preferencesState by preferencesViewModel.preferencesState.collectAsState()
-    updateColorScheme(preferencesState.sourceColor, preferencesState.getUiColorSchemeVariant())
-    Column(
+    LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(
-            space = dimensionResource(id = R.dimen.padding_small), alignment = Alignment.Top
-        ),
+        verticalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
     ) {
-        Text(
-            "The current source color with theme " +
-                    stringResource(preferencesState.getUiColorSchemeVariant().nameResId)
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(height = dimensionResource(id = R.dimen.colorbox_height))
-                .background(color = Color(preferencesState.sourceColor))
-        )
-        Button(
-            onClick = navigateToImagePicker,
-            modifier = Modifier.fillMaxWidth()
-        ) { Text(stringResource(R.string.color_extractor_for_image)) }
-        Button(
-            onClick = navigateToThemeChooser,
-            modifier = Modifier.fillMaxWidth()
-        ) { Text(stringResource(R.string.color_scheme_variant_chooser)) }
-        Button(
-            onClick = navigateToExamples,
-            modifier = Modifier.fillMaxWidth()
-        ) { Text(stringResource(R.string.show_examples)) }
+        val latestTheme = dynamicThemeList.getTheme(themeState.id) ?: themeState.toDynamicTheme()
+        item {
+            Log.d(APP_TAG, "HomeListScreen: latest theme ${latestTheme.id} - ${latestTheme.name}")
+            ThemeCard(dynamicTheme = latestTheme,
+                modifier = Modifier
+                    .padding(dimensionResource(R.dimen.padding_small))
+                    .fillMaxWidth()
+                    .clickable { navigateToDetail(latestTheme.id) })
+        }
+        if (dynamicThemeList.isEmpty()) {
+            item {
+                Text(
+                    text = stringResource(R.string.no_dynamic_themes_description),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+        } else {
+            items(items = dynamicThemeList, key = { it.id }) { theme ->
+                if (theme.id != latestTheme.id) {
+                    Log.d(APP_TAG, "HomeListScreen: saved theme ${theme.id} - ${theme.name}")
+                    ThemeCard(dynamicTheme = theme,
+                        modifier = Modifier
+                            .padding(dimensionResource(R.dimen.padding_small))
+                            .fillMaxWidth()
+                            .clickable { navigateToDetail(theme.id) })
+                }
+            }
+        }
     }
+}
+
+private fun List<DynamicTheme>.getTheme(id: Long): DynamicTheme? {
+    forEach {
+        if (it.id == id) {
+            return it
+        }
+    }
+    return null
 }
 
 @Preview(showBackground = true)
 @Composable
 fun HomeBodyPreview() {
     DynamicThemeTheme {
-        HomeBody(
-            updateColorScheme = { _, _ -> },
-            navigateToImagePicker = {},
-            navigateToThemeChooser = {},
-            navigateToExamples = {},
-            preferencesViewModel = PreferencesViewModel(object : UserPreferencesRepository {
-                override val preferences: Flow<UserPreferences>
-                    get() = emptyFlow()
-
-                override suspend fun saveSourceColorPreference(
-                    color: Int,
-                    colorSchemeVariant: Variant,
-                ) {
-                    // Nothing to do
-                }
-
-            })
+        HomeListScreen(
+            themeState = DynamicThemeUiState(),
+            dynamicThemeList = emptyList(),
+            navigateToDetail = {},
         )
     }
 }

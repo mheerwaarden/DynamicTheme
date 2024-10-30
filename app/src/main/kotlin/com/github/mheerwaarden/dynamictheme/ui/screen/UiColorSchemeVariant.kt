@@ -37,4 +37,8 @@ enum class UiColorSchemeVariant(val nameResId: Int) {
     FruitSalad(R.string.fruit_salad);
 
     fun toVariant(): Variant = Variant.entries[ordinal]
+
+    companion object {
+        fun fromVariant(variant: Variant): UiColorSchemeVariant = entries[variant.ordinal]
+    }
 }

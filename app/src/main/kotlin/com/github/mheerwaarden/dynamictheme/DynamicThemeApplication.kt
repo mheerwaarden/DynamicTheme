@@ -22,6 +22,8 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import com.github.mheerwaarden.dynamictheme.data.AppContainer
+import com.github.mheerwaarden.dynamictheme.data.AppDataContainer
 import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferencesDataStoreRepository
 
 private const val DYNAMIC_THEME_PREFERENCES_NAME = "dynamic_theme_preferences"
@@ -32,9 +34,15 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
 class DynamicThemeApplication : Application() {
     lateinit var userPreferencesRepository: UserPreferencesDataStoreRepository
 
+    /**
+     * AppContainer instance used by the rest of classes to obtain dependencies
+     */
+    lateinit var container: AppContainer
+
     override fun onCreate() {
         super.onCreate()
 
         userPreferencesRepository = UserPreferencesDataStoreRepository(dataStore)
+        container = AppDataContainer(this)
     }
 }

@@ -23,6 +23,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.github.mheerwaarden.dynamictheme.APP_TAG
 import dynamiccolor.Variant
 import kotlinx.coroutines.flow.Flow
@@ -35,15 +37,27 @@ private const val TAG = APP_TAG + "UserPreferencesRepo"
 class UserPreferencesDataStoreRepository(
     private val dataStore: DataStore<Preferences>,
 ) : UserPreferencesRepository {
-    override suspend fun saveSourceColorPreference(color: Int, colorSchemeVariant: Variant) {
-        dataStore.edit { preferences ->
-            preferences[SOURCE_COLOR] = color
-            preferences[COLOR_SCHEME_VARIANT] = colorSchemeVariant.ordinal
-        }
-    }
+    override suspend fun saveIdPreference(id: Long): Preferences = dataStore.edit { settings ->
+                // Set id and reset the other values to default
+                val defaultPreferences = UserPreferences()
+        settings[ID] = id
+        settings[NAME] = defaultPreferences.name
+        settings[SOURCE_COLOR] = defaultPreferences.sourceColor
+        settings[COLOR_SCHEME_VARIANT] = defaultPreferences.dynamicSchemeVariant.ordinal
+            }
 
-    override val preferences: Flow<UserPreferences> = dataStore.data
-        .catch {
+    override suspend fun saveNamePreference(name: String): Preferences =
+            dataStore.edit { settings -> settings[NAME] = name }
+
+    override suspend fun saveSourceColorPreference(
+        color: Int,
+        colorSchemeVariant: Variant,
+    ): Preferences = dataStore.edit { settings ->
+        settings[SOURCE_COLOR] = color
+        settings[COLOR_SCHEME_VARIANT] = colorSchemeVariant.ordinal
+            }
+
+    override val preferences: Flow<UserPreferences> = dataStore.data.catch {
             if (it is IOException) {
                 Log.e(TAG, "Error reading preferences.", it)
                 emit(emptyPreferences())
@@ -51,16 +65,20 @@ class UserPreferencesDataStoreRepository(
                 throw it
             }
         }.map { settings ->
-            Log.d(TAG, "preferences: $settings")
+        Log.d(TAG, "UserPreferencesDataStoreRepository: settings = $settings")
+            val defaultPreferences = UserPreferences()
             UserPreferences(
-                sourceColor = settings[SOURCE_COLOR] ?: UserPreferences().sourceColor,
+                id = settings[ID] ?: defaultPreferences.id,
+                name = settings[NAME] ?: defaultPreferences.name,
+                sourceColor = settings[SOURCE_COLOR] ?: defaultPreferences.sourceColor,
                 dynamicSchemeVariant = Variant.entries[settings[COLOR_SCHEME_VARIANT]
-                        ?: UserPreferences().dynamicSchemeVariant.ordinal]
+                        ?: defaultPreferences.dynamicSchemeVariant.ordinal]
             )
-
         }
 
     private companion object {
+        val ID = longPreferencesKey("id")
+        val NAME = stringPreferencesKey("name")
         val SOURCE_COLOR = intPreferencesKey("source_color")
         val COLOR_SCHEME_VARIANT = intPreferencesKey("color_scheme_variant")
     }

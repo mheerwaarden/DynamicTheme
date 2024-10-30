@@ -17,11 +17,14 @@
 
 package com.github.mheerwaarden.dynamictheme.data.preferences
 
+import androidx.datastore.preferences.core.Preferences
 import dynamiccolor.Variant
 import kotlinx.coroutines.flow.Flow
 
 interface UserPreferencesRepository {
     val preferences: Flow<UserPreferences>
 
-    suspend fun saveSourceColorPreference(color: Int, colorSchemeVariant: Variant)
+    suspend fun saveIdPreference(id: Long): Preferences
+    suspend fun saveNamePreference(name: String): Preferences
+    suspend fun saveSourceColorPreference(color: Int, colorSchemeVariant: Variant): Preferences
 }

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.8.0-alpha07"
+agp = "8.8.0-alpha08"
 kotlin = "2.0.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -13,6 +13,9 @@ lifecycleViewmodelCompose = "2.8.6"
 paletteKtx = "1.0.0"
 coilCompose = "2.7.0"
 datastorePreferences = "1.1.1"
+room = "2.6.1"
+ksp = "2.0.0-1.0.22"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -37,9 +40,12 @@ androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", versi
 androidx-material3-window-size-clazz = { module = "androidx.compose.material3:material3-window-size-class" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

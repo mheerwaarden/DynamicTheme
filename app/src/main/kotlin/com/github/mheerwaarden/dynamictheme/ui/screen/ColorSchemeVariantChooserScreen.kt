@@ -40,16 +40,12 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
@@ -64,7 +60,6 @@ object ColorSchemeVariantDestination : NavigationDestination {
 @Composable
 fun ColorSchemeVariantChooserScreen(
     themeState: DynamicThemeUiState,
-    windowSizeClass: WindowSizeClass,
     onUpdateTheme: (Int, UiColorSchemeVariant) -> Unit,
     navigateToExamples: () -> Unit,
     navigateBack: () -> Unit,
@@ -141,7 +136,7 @@ fun ColorSchemeVariantChooserScreen(
             )
             HorizontalDivider()
             ThemeShowcaseScreen(
-                windowSizeClass,
+                isHorizontalLayout = themeState.isHorizontalLayout(),
                 lightColorSchemeState = themeState.lightColorSchemeState,
                 darkColorSchemeState = themeState.darkColorSchemeState
             )
@@ -149,13 +144,11 @@ fun ColorSchemeVariantChooserScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 @Preview(showBackground = true)
 fun ThemeChooserScreenPreview() {
     ColorSchemeVariantChooserScreen(
         themeState = DynamicThemeUiState(),
-        windowSizeClass = WindowSizeClass.calculateFromSize(DpSize(580.dp, 880.dp)),
         onUpdateTheme = { _, _ -> },
         navigateToExamples = {},
         navigateBack = {}

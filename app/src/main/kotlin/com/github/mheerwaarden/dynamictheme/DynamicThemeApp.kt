@@ -18,6 +18,7 @@
 package com.github.mheerwaarden.dynamictheme
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
@@ -33,18 +34,20 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.PreferencesViewModel
 import com.github.mheerwaarden.dynamictheme.ui.fromColorSchemeState
-import com.github.mheerwaarden.dynamictheme.ui.home.HomeDestination
 import com.github.mheerwaarden.dynamictheme.ui.navigation.DynamicThemeNavHost
-import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
+import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeViewModel
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
 import com.github.mheerwaarden.dynamictheme.ui.toColorSchemeState
 
@@ -54,48 +57,57 @@ const val APP_TAG = "DynamicTheme"
 fun DynamicThemeApp(
     windowSizeClass: WindowSizeClass,
     modifier: Modifier = Modifier,
+    themeViewModel: DynamicThemeViewModel = viewModel(factory = AppViewModelProvider.Factory),
     preferencesViewModel: PreferencesViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
-    val preferences = preferencesViewModel.preferencesState.collectAsState().value
+    val context = LocalContext.current
+    val preferences by preferencesViewModel.preferencesState.collectAsState()
     val preferenceColorSchemeState = ColorExtractor.createDynamicColorScheme(
         sourceArgb = preferences.sourceColor,
         schemeVariant = preferences.dynamicSchemeVariant,
         isDark = isSystemInDarkTheme()
     ).toColorSchemeState()
-    Log.d(APP_TAG, "Using theme ${preferences.dynamicSchemeVariant}")
+    Log.d(
+        APP_TAG,
+        "DynamicThemeApp: Using theme ${preferences.id} ${preferences.name}/${preferences.dynamicSchemeVariant}"
+    )
+
+    // Prepare theme view model
+    themeViewModel.updateName(preferences.name)
+    themeViewModel.updateColorScheme(preferences.sourceColor, preferences.uiColorSchemeVariant)
+    themeViewModel.updateWindowSizeClass(windowSizeClass)
+    themeViewModel.onException = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
 
     DynamicThemeTheme(colorScheme = fromColorSchemeState(preferenceColorSchemeState)) {
-        DynamicThemeAppScreen(
-            windowSizeClass = windowSizeClass,
-            onChangeColorScheme = { sourceColorArgb, uiColorSchemeVariant ->
-                Log.d(
-                    APP_TAG,
-                    "Changing color scheme to source $sourceColorArgb scheme $uiColorSchemeVariant"
-                )
+        val themeState by themeViewModel.uiState.collectAsState()
+        val lastId by rememberSaveable { mutableLongStateOf(themeState.id) }
+        val navController = rememberNavController()
+
+        // Once the save thread is finished, there is an ID; update the preference for this
+        if (lastId != themeState.id) {
+            preferencesViewModel.setIdPreference(themeState.id)
+        }
+
+        DynamicThemeNavHost(
+            navController = navController,
+            themeState = themeState,
+            onResetPreferences = { preferencesViewModel.setIdPreference(-1L) },
+            onNameChange = { name ->
+                themeViewModel.updateName(name)
+                preferencesViewModel.setNamePreference(name)
+            },
+            onColorSchemeChange = { sourceColorArgb, uiColorSchemeVariant ->
+                themeViewModel.updateColorScheme(sourceColorArgb, uiColorSchemeVariant)
                 preferencesViewModel.setSourceColorPreference(
-                    sourceColorArgb,
-                    uiColorSchemeVariant.toVariant()
+                    sourceColorArgb, uiColorSchemeVariant.toVariant()
                 )
+            },
+            onSave = {
+                themeViewModel.upsertDynamicTheme()
             },
             modifier = modifier
         )
     }
-}
-
-@Composable
-fun DynamicThemeAppScreen(
-    windowSizeClass: WindowSizeClass,
-    onChangeColorScheme: (Int, UiColorSchemeVariant) -> Unit,
-    modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
-) {
-    DynamicThemeNavHost(
-        navController = navController,
-        onChangeColorScheme = onChangeColorScheme,
-        windowSizeClass = windowSizeClass,
-        startDestination = HomeDestination.route,
-        modifier = modifier
-    )
 }
 
 /**

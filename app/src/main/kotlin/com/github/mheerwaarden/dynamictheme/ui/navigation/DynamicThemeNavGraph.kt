@@ -17,25 +17,22 @@
 
 package com.github.mheerwaarden.dynamictheme.ui.navigation
 
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
+import androidx.navigation.navArgument
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeDestination
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeScreen
-import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeViewModel
-import com.github.mheerwaarden.dynamictheme.ui.screen.ExamplesDestination
-import com.github.mheerwaarden.dynamictheme.ui.screen.ExamplesScreen
+import com.github.mheerwaarden.dynamictheme.ui.screen.ColorSchemeVariantChooserScreen
+import com.github.mheerwaarden.dynamictheme.ui.screen.ColorSchemeVariantDestination
+import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeDetailDestination
+import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeDetailScreen
+import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerScreen
-import com.github.mheerwaarden.dynamictheme.ui.screen.ColorSchemeVariantDestination
-import com.github.mheerwaarden.dynamictheme.ui.screen.ColorSchemeVariantChooserScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 
 /**
@@ -44,33 +41,36 @@ import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 @Composable
 fun DynamicThemeNavHost(
     navController: NavHostController,
-    onChangeColorScheme: (Int, UiColorSchemeVariant) -> Unit,
-    windowSizeClass: WindowSizeClass,
+    themeState: DynamicThemeUiState,
+    onResetPreferences: () -> Unit,
+    onNameChange: (String) -> Unit,
+    onColorSchemeChange: (Int, UiColorSchemeVariant) -> Unit,
+    onSave: () -> Unit,
     modifier: Modifier = Modifier,
     startDestination: String = HomeDestination.route,
-    themeViewModel: DynamicThemeViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
-    val themeState by themeViewModel.uiState.collectAsState()
 
     NavHost(
         navController = navController, startDestination = startDestination, modifier = modifier
     ) {
         composable(route = HomeDestination.route) {
             HomeScreen(
-                updateColorScheme = themeViewModel::updateColorScheme,
+                themeState = themeState,
                 navigateToImagePicker = { navController.navigate(ImagePickerDestination.route) },
-                navigateToThemeChooser = { navController.navigate(ColorSchemeVariantDestination.route) },
-                navigateToExamples = { navController.navigate(ExamplesDestination.route) }
+                navigateToDetail = {
+                    if (it < 0) {
+                        navController.navigate(DynamicThemeDetailDestination.route)
+                    } else {
+                        navController.navigate("${DynamicThemeDetailDestination.route}/$it")
+                    }
+                },
             )
         }
         composable(route = ImagePickerDestination.route) {
             ImagePickerScreen(
                 themeState = themeState,
-                windowSizeClass = windowSizeClass,
-                onUpdateColorScheme = { sourceColorArgb, uiColorSchemeVariant ->
-                    themeViewModel.updateColorScheme(sourceColorArgb, uiColorSchemeVariant)
-                    onChangeColorScheme(sourceColorArgb, uiColorSchemeVariant)
-                },
+                onResetPreferences = onResetPreferences,
+                onUpdateColorScheme = onColorSchemeChange,
                 navigateToThemeChooser = { navController.navigate(ColorSchemeVariantDestination.route) },
                 navigateBack = { navController.popBackStack() }
             )
@@ -78,22 +78,33 @@ fun DynamicThemeNavHost(
         composable(route = ColorSchemeVariantDestination.route) {
             ColorSchemeVariantChooserScreen(
                 themeState = themeState,
-                windowSizeClass = windowSizeClass,
-                onUpdateTheme = { sourceColorArgb, uiColorSchemeVariant ->
-                    themeViewModel.updateColorScheme(sourceColorArgb, uiColorSchemeVariant)
-                    onChangeColorScheme(sourceColorArgb, uiColorSchemeVariant)
-                },
-                navigateToExamples = { navController.navigate(ExamplesDestination.route) },
+                onUpdateTheme = onColorSchemeChange,
+                navigateToExamples = { navController.navigate(DynamicThemeDetailDestination.route) },
                 navigateBack = { navController.popBackStack() }
             )
         }
-        composable(route = ExamplesDestination.route) {
-            ExamplesScreen(
+        composable(route = DynamicThemeDetailDestination.route) {
+            DynamicThemeDetailScreen(
                 themeState = themeState,
-                windowSizeClass = windowSizeClass,
+                onNameChange = onNameChange,
+                onSave = onSave,
                 navigateHome = { navController.navigate(HomeDestination.route) },
                 navigateBack = { navController.popBackStack() }
             )
         }
+        composable(
+            route = DynamicThemeDetailDestination.routeWithArgs,
+            arguments = listOf(navArgument(DynamicThemeDetailDestination.themeIdArg) {
+                type = NavType.LongType
+            })
+        ) {
+            // Existing theme in database, no update of preferences
+            DynamicThemeDetailScreen(
+                isHorizontalLayout = themeState.isHorizontalLayout(),
+                navigateHome = { navController.navigate(HomeDestination.route) },
+                navigateBack = { navController.popBackStack() }
+            )
+        }
+
     }
 }

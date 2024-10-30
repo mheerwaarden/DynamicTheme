@@ -32,6 +32,7 @@ fun ErrorDialog(
     val builder = AlertDialog.Builder(context)
     builder.setTitle(R.string.attention)
         .setMessage(stringResource(R.string.an_error_occurred, errorMessage))
+        .setIcon(R.drawable.ic_broken_image)
     builder.setPositiveButton(R.string.ok) { _, _ -> onDismiss() }
     builder.show()
 }

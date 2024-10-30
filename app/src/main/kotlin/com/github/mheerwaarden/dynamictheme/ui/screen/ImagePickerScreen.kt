@@ -46,10 +46,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,8 +63,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
@@ -89,8 +88,6 @@ object ImagePickerDestination : NavigationDestination {
  * select a color scheme based on the selected color.
  *
  * @param themeState The current state of the theme selection.
- * @param windowSizeClass The current window size class. On a compact width, the image is above the
- * columns, otherwise they will be side by side.
  * @param onUpdateColorScheme The callback to invoke when to update the color scheme is updated when
  * a color is selected.
  * @param navigateToThemeChooser The callback to invoke to go to the next screen.
@@ -103,7 +100,7 @@ object ImagePickerDestination : NavigationDestination {
 @Composable
 fun ImagePickerScreen(
     themeState: DynamicThemeUiState,
-    windowSizeClass: WindowSizeClass,
+    onResetPreferences: () -> Unit,
     onUpdateColorScheme: (Int, UiColorSchemeVariant) -> Unit,
     navigateToThemeChooser: () -> Unit,
     navigateBack: () -> Unit,
@@ -121,6 +118,8 @@ fun ImagePickerScreen(
                     viewModel.updateState(context, uri)
                 }
             }
+
+    var mustReset by rememberSaveable { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -147,11 +146,15 @@ fun ImagePickerScreen(
     ) { innerPadding ->
         ImagePickerBody(
             uiState = uiState,
-            isCompactWidth = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact,
+            isHorizontalLayout = themeState.isHorizontalLayout(),
             onSelectImage = { uri ->
                 viewModel.updateState(context, uri)
             },
             onSelectColor = { color ->
+                if (mustReset) {
+                    onResetPreferences()
+                    mustReset = false
+                }
                 onUpdateColorScheme(color, themeState.uiColorSchemeVariant)
                 navigateToThemeChooser()
             },
@@ -165,12 +168,28 @@ fun ImagePickerScreen(
 @Composable
 private fun ImagePickerBody(
     uiState: ImagePickerUiState,
-    isCompactWidth: Boolean,
+    isHorizontalLayout: Boolean,
     onSelectImage: (Uri) -> Unit,
     onSelectColor: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (isCompactWidth) {
+    if (isHorizontalLayout) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(
+                dimensionResource(id = R.dimen.padding_small),
+                alignment = Alignment.Start
+            ),
+            modifier = modifier.fillMaxSize()
+        ) {
+            ImagePicker(uiState.imageUri, onSelectImage, modifier = Modifier.weight(1f))
+            VerticalDivider()
+            Swatches(
+                uiState = uiState,
+                onSelectColor = onSelectColor,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    } else {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(
@@ -181,22 +200,6 @@ private fun ImagePickerBody(
         ) {
             ImagePicker(uiState.imageUri, onSelectImage, modifier = Modifier.weight(1f))
             HorizontalDivider()
-            Swatches(
-                uiState = uiState,
-                onSelectColor = onSelectColor,
-                modifier = Modifier.weight(1f)
-            )
-        }
-    } else {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(
-                dimensionResource(id = R.dimen.padding_small),
-                alignment = Alignment.Start
-            ),
-            modifier = modifier.fillMaxSize()
-        ) {
-            ImagePicker(uiState.imageUri, onSelectImage, modifier = Modifier.weight(1f))
-            VerticalDivider()
             Swatches(
                 uiState = uiState,
                 onSelectColor = onSelectColor,
@@ -321,18 +324,13 @@ private fun ImagePicker(
 
 private fun Int.hexString(): String = String.format("#%06X", (0xFFFFFF and this))
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview(showBackground = true)
 @Composable
 fun ImagePickerScreenPreview() {
     DynamicThemeTheme {
-        val windowSizeClass = WindowSizeClass.calculateFromSize(
-            // Compact width, normal mobile phone
-            DpSize(width = 580.dp, height = 880.dp)
-        )
         ImagePickerScreen(
             themeState = DynamicThemeUiState(),
-            windowSizeClass = windowSizeClass,
+            onResetPreferences = {},
             onUpdateColorScheme = { _, _ -> },
             navigateToThemeChooser = {},
             navigateBack = {}
