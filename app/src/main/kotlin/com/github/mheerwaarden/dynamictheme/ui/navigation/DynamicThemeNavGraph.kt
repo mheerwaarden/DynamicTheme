@@ -17,6 +17,7 @@
 
 package com.github.mheerwaarden.dynamictheme.ui.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -24,13 +25,14 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.github.mheerwaarden.dynamictheme.APP_TAG
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeDestination
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.ColorSchemeVariantChooserScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.ColorSchemeVariantDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeDetailDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeDetailScreen
-import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
@@ -58,7 +60,8 @@ fun DynamicThemeNavHost(
                 themeState = themeState,
                 navigateToImagePicker = { navController.navigate(ImagePickerDestination.route) },
                 navigateToDetail = {
-                    if (it < 0) {
+                    Log.d(APP_TAG + "_Route", "Home -> Detail for ID: $it")
+                    if (it <= 0) {
                         navController.navigate(DynamicThemeDetailDestination.route)
                     } else {
                         navController.navigate("${DynamicThemeDetailDestination.route}/$it")

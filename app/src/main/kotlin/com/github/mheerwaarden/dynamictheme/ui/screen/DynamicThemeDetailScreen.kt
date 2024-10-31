@@ -45,7 +45,8 @@ import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
-import com.github.mheerwaarden.dynamictheme.ui.ColorSchemeState
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
 import com.github.mheerwaarden.dynamictheme.ui.component.InputField
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 
@@ -75,9 +76,7 @@ fun DynamicThemeDetailScreen(
 ) {
     val themeState = viewModel.uiState.collectAsState().value
     DynamicThemeDetailScreen(
-        name = themeState.name,
-        lightColorSchemeState = themeState.lightColorSchemeState,
-        darkColorSchemeState = themeState.darkColorSchemeState,
+        themeState = themeState,
         isHorizontalLayout = isHorizontalLayout,
         isChanged = false,
         onNameChange = viewModel::updateName,
@@ -99,9 +98,7 @@ fun DynamicThemeDetailScreen(
     modifier: Modifier = Modifier,
 ) {
     DynamicThemeDetailScreen(
-        name = themeState.name,
-        lightColorSchemeState = themeState.lightColorSchemeState,
-        darkColorSchemeState = themeState.darkColorSchemeState,
+        themeState = themeState,
         isHorizontalLayout = themeState.isHorizontalLayout(),
         isChanged = true,
         onNameChange = onNameChange,
@@ -115,9 +112,7 @@ fun DynamicThemeDetailScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DynamicThemeDetailScreen(
-    name: String,
-    lightColorSchemeState: ColorSchemeState,
-    darkColorSchemeState: ColorSchemeState,
+    themeState: DynamicThemeUiState,
     isHorizontalLayout: Boolean,
     isChanged: Boolean,
     onNameChange: (String) -> Unit,
@@ -141,13 +136,14 @@ private fun DynamicThemeDetailScreen(
                     )
                 },
             )
-        }, modifier = modifier
+        },
+        modifier = modifier
     ) { innerPadding ->
-        Log.d(TAG, "DynamicThemeDetailScreen: name $name changed $isChanged")
+        Log.d(TAG, "DynamicThemeDetailScreen: name ${themeState.name} changed $isChanged")
         Column(modifier = Modifier.padding(innerPadding)) {
             InputField(
                 labelId = R.string.name,
-                value = name,
+                value = themeState.name,
                 singleLine = true,
                 onValueChange = {
                     onNameChange(it)
@@ -174,10 +170,15 @@ private fun DynamicThemeDetailScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
+            Log.d(TAG, "DynamicThemeDetailScreen: Color ${themeState.sourceColorArgb} Variant ${themeState.uiColorSchemeVariant}")
+            ColorAndVariantChoice(
+                sourceArgb = themeState.sourceColorArgb,
+                colorSchemeVariant = stringResource(themeState.uiColorSchemeVariant.nameResId)
+            )
             ThemeShowcaseScreen(
                 isHorizontalLayout = isHorizontalLayout,
-                lightColorSchemeState = lightColorSchemeState,
-                darkColorSchemeState = darkColorSchemeState,
+                lightColorSchemeState = themeState.lightColorSchemeState,
+                darkColorSchemeState = themeState.darkColorSchemeState,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -191,7 +192,8 @@ fun DetailScreenVerticalPreview() {
         onNameChange = {},
         onSave = {},
         navigateHome = {},
-        navigateBack = {})
+        navigateBack = {}
+    )
 }
 
 @Composable
@@ -201,5 +203,6 @@ fun DetailScreenHorizontalPreview() {
         onNameChange = {},
         onSave = {},
         navigateHome = {},
-        navigateBack = {})
+        navigateBack = {}
+    )
 }

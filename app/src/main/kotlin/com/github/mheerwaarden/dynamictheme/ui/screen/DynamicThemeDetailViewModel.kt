@@ -20,13 +20,20 @@ package com.github.mheerwaarden.dynamictheme.ui.screen
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicThemeRepository
+import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferencesRepository
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
 import kotlinx.coroutines.launch
 
 class DynamicThemeDetailViewModel(
     savedStateHandle: SavedStateHandle,
     dynamicThemeRepository: DynamicThemeRepository,
-) : DynamicThemeViewModel(dynamicThemeRepository) {
-
+    userPreferencesRepository: UserPreferencesRepository,
+) : DynamicThemeViewModel(
+    dynamicThemeRepository = dynamicThemeRepository,
+    userPreferencesRepository = userPreferencesRepository,
+    isPreferenceState = false
+) {
     private val themeId: Long =
             checkNotNull(savedStateHandle[DynamicThemeDetailDestination.themeIdArg])
 

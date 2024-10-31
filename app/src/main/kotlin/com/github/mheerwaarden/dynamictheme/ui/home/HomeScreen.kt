@@ -48,8 +48,8 @@ import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
-import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.screen.ThemeCard
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
 

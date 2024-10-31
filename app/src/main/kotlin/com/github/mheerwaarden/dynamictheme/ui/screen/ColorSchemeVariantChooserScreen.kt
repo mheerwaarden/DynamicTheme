@@ -49,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 
 object ColorSchemeVariantDestination : NavigationDestination {

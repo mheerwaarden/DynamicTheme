@@ -313,7 +313,8 @@ fun ThemeCard(
         Column(
             verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.animateContentSize(
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMedium
                 )
             )
         ) {
@@ -326,28 +327,12 @@ fun ThemeCard(
                     vertical = dimensionResource(R.dimen.padding_very_small)
                 )
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(
-                    horizontal = dimensionResource(R.dimen.padding_small),
-                    vertical = dimensionResource(R.dimen.padding_very_small)
+            ColorAndVariantChoice(
+                sourceArgb = dynamicTheme.sourceArgb,
+                colorSchemeVariant = stringResource(
+                    UiColorSchemeVariant.fromVariant(dynamicTheme.colorSchemeVariant).nameResId
                 )
-            ) {
-                ColorBox(
-                    textColor = Color(ColorExtractor.getContrastColorArgb(dynamicTheme.sourceArgb)),
-                    backgroundColor = Color(dynamicTheme.sourceArgb),
-                    text = stringResource(R.string.source_color),
-                    isSmall = true,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = stringResource(UiColorSchemeVariant.fromVariant(dynamicTheme.colorSchemeVariant).nameResId),
-                    textAlign = TextAlign.Start,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier
-                        .weight(2f)
-                        .padding(start = dimensionResource(R.dimen.padding_small))
-                )
-            }
+            )
 
             Box(modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_very_small))) {
                 Column {
@@ -360,6 +345,37 @@ fun ThemeCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ColorAndVariantChoice(
+    sourceArgb: Int,
+    colorSchemeVariant: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.padding(
+            horizontal = dimensionResource(R.dimen.padding_small),
+            vertical = dimensionResource(R.dimen.padding_very_small)
+        )
+    ) {
+        ColorBox(
+            textColor = Color(ColorExtractor.getContrastColorArgb(sourceArgb)),
+            backgroundColor = Color(sourceArgb),
+            text = stringResource(R.string.source_color),
+            isSmall = true,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = colorSchemeVariant,
+            textAlign = TextAlign.Start,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier
+                .weight(2f)
+                .padding(start = dimensionResource(R.dimen.padding_small))
+        )
     }
 }
 

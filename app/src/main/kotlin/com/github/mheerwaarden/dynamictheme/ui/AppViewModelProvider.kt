@@ -26,19 +26,22 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.github.mheerwaarden.dynamictheme.DynamicThemeApplication
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeViewModel
 import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeDetailViewModel
-import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeViewModel
 import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerViewModel
 
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer { HomeViewModel(dynamicThemeApplication().container.dynamicThemeRepository) }
-        initializer { PreferencesViewModel(dynamicThemeApplication().userPreferencesRepository) }
         initializer { ImagePickerViewModel() }
-        initializer { DynamicThemeViewModel(dynamicThemeApplication().container.dynamicThemeRepository) }
+        initializer {
+            DynamicThemeViewModel(
+                dynamicThemeApplication().container.dynamicThemeRepository, dynamicThemeApplication().userPreferencesRepository
+            )
+        }
         initializer {
             DynamicThemeDetailViewModel(
                 this.createSavedStateHandle(),
-                dynamicThemeApplication().container.dynamicThemeRepository
+                dynamicThemeApplication().container.dynamicThemeRepository,
+                dynamicThemeApplication().userPreferencesRepository
             )
         }
     }

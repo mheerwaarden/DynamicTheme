@@ -47,10 +47,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -68,6 +64,7 @@ import coil.compose.AsyncImage
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
 
@@ -112,14 +109,11 @@ fun ImagePickerScreen(
 
     // [GetContent] is an ActivityResultContract that will launch a browser for the filter
     // specified in the launch call
-    val browseImageLauncher =
-            rememberLauncherForActivityResult(GetContent()) { uri ->
-                if (uri != null) {
-                    viewModel.updateState(context, uri)
-                }
-            }
-
-    var mustReset by rememberSaveable { mutableStateOf(true) }
+    val browseImageLauncher = rememberLauncherForActivityResult(GetContent()) { uri ->
+        if (uri != null) {
+            viewModel.updateState(context, uri)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -151,10 +145,7 @@ fun ImagePickerScreen(
                 viewModel.updateState(context, uri)
             },
             onSelectColor = { color ->
-                if (mustReset) {
-                    onResetPreferences()
-                    mustReset = false
-                }
+                onResetPreferences()
                 onUpdateColorScheme(color, themeState.uiColorSchemeVariant)
                 navigateToThemeChooser()
             },
@@ -230,8 +221,7 @@ fun SwatchesColumn(
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(
-            dimensionResource(id = R.dimen.padding_minimum),
-            alignment = Alignment.Top
+            dimensionResource(id = R.dimen.padding_minimum), alignment = Alignment.Top
         ),
         modifier = modifier
     ) {
@@ -286,12 +276,11 @@ private fun ImagePicker(
     modifier: Modifier = Modifier,
 ) {
     /** [PickVisualMedia] is an ActivityResultContract that will launch the photo picker intent */
-    val photoPickerLauncher =
-            rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
-                if (uri != null) {
-                    onSelectImage(uri)
-                }
-            }
+    val photoPickerLauncher = rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+        if (uri != null) {
+            onSelectImage(uri)
+        }
+    }
 
     if (selectedImageUri == Uri.EMPTY) {
         // Question mark icon

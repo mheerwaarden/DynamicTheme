@@ -21,7 +21,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicThemeRepository
-import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeViewModel.Companion.TIMEOUT_MILLIS
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel.Companion.TIMEOUT_MILLIS
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -33,8 +33,7 @@ class HomeViewModel(
     dynamicThemesRepository: DynamicThemeRepository,
 ) : ViewModel() {
     val uiState: StateFlow<List<DynamicTheme>> =
-            dynamicThemesRepository.getAllDynamicThemesStream()
-                .stateIn(
+            dynamicThemesRepository.getAllDynamicThemesStream().stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
                     initialValue = listOf()
