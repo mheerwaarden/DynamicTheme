@@ -1,3 +1,20 @@
+/*
+ * Copyright (c) 2024. Marcel van Heerwaarden
+ *
+ * Copyright (C) 2019 The Android Open Source Project
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.github.mheerwaarden.dynamictheme.ui.theme
 
 import android.os.Build
@@ -9,7 +26,12 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
+import com.github.mheerwaarden.dynamictheme.ui.toColorScheme
+import dynamiccolor.Variant
 
 val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -33,14 +55,17 @@ val LightColorScheme = lightColorScheme(
     */
 )
 
+/**
+ * The theme for the app itself. Since the composed theme is showcased, the theme for the app
+ * should be as neutral as possible.
+ */
 @Composable
-fun DynamicThemeTheme(
+fun DynamicThemeAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = getDefaultColorScheme(darkTheme, dynamicColor)
+    // Dynamic color, available on Android 12+, is not very useful for this app
+    val colorScheme = getDefaultColorScheme(darkTheme = darkTheme, dynamicColor = false)
 
     MaterialTheme(
         colorScheme = colorScheme,
@@ -50,7 +75,7 @@ fun DynamicThemeTheme(
 }
 
 @Composable
-fun DynamicThemeTheme(
+fun DynamicMaterialTheme(
     colorScheme: ColorScheme,
     content: @Composable () -> Unit,
 ) {
@@ -72,7 +97,17 @@ fun getDefaultColorScheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> {
+            // Dark scheme based on black
+            ColorExtractor.createDynamicColorScheme(
+                sourceArgb = Color.Black.toArgb(), schemeVariant = Variant.FIDELITY, isDark = true
+            ).toColorScheme()
+        }
+        else -> {
+            // Light scheme based on white
+            ColorExtractor.createDynamicColorScheme(
+                sourceArgb = Color.White.toArgb(), schemeVariant = Variant.FIDELITY, isDark = false
+            ).toColorScheme()
+        }
     }
 }

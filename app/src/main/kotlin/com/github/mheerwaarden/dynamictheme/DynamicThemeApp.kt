@@ -58,7 +58,7 @@ import com.github.mheerwaarden.dynamictheme.ui.LoadingState
 import com.github.mheerwaarden.dynamictheme.ui.ProgressIndicator
 import com.github.mheerwaarden.dynamictheme.ui.navigation.DynamicThemeNavHost
 import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
-import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
+import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
 
 const val APP_TAG = "DynamicTheme"
 
@@ -124,12 +124,7 @@ fun DynamicThemeAppScreen(
     onSave: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Log.d(
-        APP_TAG,
-        "Using theme ${themeState.name} from color ${themeState.sourceColorArgb} and variant ${themeState.uiColorSchemeVariant}"
-    )
-
-    DynamicThemeTheme(colorScheme = themeState.toColorScheme()) {
+    DynamicThemeAppTheme() {
         val navController = rememberNavController()
 
         DynamicThemeNavHost(

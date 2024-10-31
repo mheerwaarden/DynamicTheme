@@ -51,7 +51,7 @@ import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.ThemeCard
-import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
+import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
 
 object HomeDestination : NavigationDestination {
     override val route = "home"
@@ -159,7 +159,7 @@ private fun List<DynamicTheme>.getTheme(id: Long): DynamicTheme? {
 @Preview(showBackground = true)
 @Composable
 fun HomeBodyPreview() {
-    DynamicThemeTheme {
+    DynamicThemeAppTheme {
         HomeListScreen(
             themeState = DynamicThemeUiState(),
             dynamicThemeList = emptyList(),

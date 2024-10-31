@@ -270,9 +270,9 @@ data class DynamicThemeUiState(
 
     @Composable
     fun toColorScheme(): ColorScheme = if (isSystemInDarkTheme()) {
-        fromColorSchemeState(darkColorSchemeState)
+        darkColorSchemeState.toColorScheme()
     } else {
-        fromColorSchemeState(lightColorSchemeState)
+        lightColorSchemeState.toColorScheme()
     }
 
     fun isHorizontalLayout(): Boolean = windowWidthSizeClass != WindowWidthSizeClass.Compact

@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.github.mheerwaarden.dynamictheme.R
-import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
+import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
 import java.time.LocalDateTime
 
 /**
@@ -198,7 +198,7 @@ private fun TimePickerDialog(
 @Preview(showBackground = true)
 @Composable
 fun MaterialTimePickerDialogVerticalPreview() {
-    DynamicThemeTheme {
+    DynamicThemeAppTheme {
         ShowTimePickerDialog(layoutType = TimePickerLayoutType.Vertical)
     }
 }
@@ -207,7 +207,7 @@ fun MaterialTimePickerDialogVerticalPreview() {
 @Preview(showBackground = true, widthDp = 900)
 @Composable
 fun MaterialTimePickerDialogHorizontalPreview() {
-    DynamicThemeTheme {
+    DynamicThemeAppTheme {
         ShowTimePickerDialog(layoutType = TimePickerLayoutType.Horizontal)
     }
 }

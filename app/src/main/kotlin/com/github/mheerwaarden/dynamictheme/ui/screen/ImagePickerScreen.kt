@@ -66,7 +66,7 @@ import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
-import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
+import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
 
 object ImagePickerDestination : NavigationDestination {
     override val route = "image_picker"
@@ -316,7 +316,7 @@ private fun Int.hexString(): String = String.format("#%06X", (0xFFFFFF and this)
 @Preview(showBackground = true)
 @Composable
 fun ImagePickerScreenPreview() {
-    DynamicThemeTheme {
+    DynamicThemeAppTheme {
         ImagePickerScreen(
             themeState = DynamicThemeUiState(),
             onResetPreferences = {},

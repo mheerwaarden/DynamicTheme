@@ -75,9 +75,10 @@ import com.github.mheerwaarden.dynamictheme.ui.ColorSchemeState
 import com.github.mheerwaarden.dynamictheme.ui.component.DateField
 import com.github.mheerwaarden.dynamictheme.ui.component.InputField
 import com.github.mheerwaarden.dynamictheme.ui.component.TimeField
-import com.github.mheerwaarden.dynamictheme.ui.fromColorSchemeState
-import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeTheme
+import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicMaterialTheme
+import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
 import com.github.mheerwaarden.dynamictheme.ui.theme.getDefaultColorScheme
+import com.github.mheerwaarden.dynamictheme.ui.toColorScheme
 import com.github.mheerwaarden.dynamictheme.ui.toColorSchemeState
 import palettes.TonalPalette
 import java.time.LocalDateTime
@@ -107,7 +108,7 @@ fun ThemeShowcaseScreen(
         darkTheme = true, dynamicColor = false
     ).toColorSchemeState(),
 ) {
-    DynamicThemeTheme(colorScheme = fromColorSchemeState(lightColorSchemeState)) {
+    DynamicMaterialTheme(colorScheme = lightColorSchemeState.toColorScheme()) {
         ExpandableSections(
             sections = listOf(stringResource(R.string.light_scheme) to {
                 ColorSchemeShowcaseScreen(isHorizontalLayout)
@@ -184,7 +185,7 @@ fun ColorSchemeShowcaseScreen(isHorizontalLayout: Boolean, modifier: Modifier = 
 
 /**
  * Dark theme version of [ColorSchemeShowcaseScreen] by surrounding the call with the
- * [DynamicThemeTheme] set to the dark color scheme.
+ * [DynamicMaterialTheme] set to the dark color scheme.
  */
 @Composable
 fun DarkColorSchemeShowcaseScreen(
@@ -192,7 +193,7 @@ fun DarkColorSchemeShowcaseScreen(
     isHorizontalLayout: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    DynamicThemeTheme(colorScheme = fromColorSchemeState(darkColorScheme)) {
+    DynamicMaterialTheme(colorScheme = darkColorScheme.toColorScheme()) {
         ColorSchemeShowcaseScreen(isHorizontalLayout, modifier)
     }
 }
@@ -646,7 +647,7 @@ fun ColorShowcaseScreenPreview() {
 @Preview(showBackground = true)
 @Composable
 fun ComponentShowcaseScreenPreview() {
-    DynamicThemeTheme {
+    DynamicThemeAppTheme {
         ComponentShowcaseScreen()
     }
 }
@@ -660,7 +661,7 @@ fun TonalPaletteScreenPreview() {
 @Preview(showBackground = true)
 @Composable
 fun ThemeShowcaseScreenPreview() {
-    DynamicThemeTheme {
+    DynamicThemeAppTheme {
         ThemeShowcaseScreen(
             lightColorSchemeState = getDefaultColorScheme(
                 darkTheme = true, dynamicColor = false
