@@ -91,7 +91,7 @@ fun DynamicThemeApp(
             )
 
             DynamicThemeAppScreen(themeState = themeState,
-                onResetPreferences = { themeViewModel.setIdPreference(-1L) },
+                onResetState = { themeViewModel.resetState() },
                 onNameChange = { name -> themeViewModel.updateName(name) },
                 onColorSchemeChange = { sourceColorArgb, uiColorSchemeVariant ->
                     themeViewModel.updateColorScheme(sourceColorArgb, uiColorSchemeVariant)
@@ -118,7 +118,7 @@ fun DynamicThemeApp(
 @Composable
 fun DynamicThemeAppScreen(
     themeState: DynamicThemeUiState,
-    onResetPreferences: () -> Unit,
+    onResetState: () -> Unit,
     onNameChange: (String) -> Unit,
     onColorSchemeChange: (Int, UiColorSchemeVariant) -> Unit,
     onSave: () -> Unit,
@@ -130,7 +130,7 @@ fun DynamicThemeAppScreen(
         DynamicThemeNavHost(
             navController = navController,
             themeState = themeState,
-            onResetPreferences = onResetPreferences,
+            onResetState = onResetState,
             onNameChange = onNameChange,
             onColorSchemeChange = onColorSchemeChange,
             onSave = onSave,

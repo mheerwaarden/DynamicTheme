@@ -202,13 +202,21 @@ open class DynamicThemeViewModel(
                 dynamicThemeRepository.deleteDynamicThemeById(Id(_uiState.value.id))
                 if (isPreferenceState) {
                     // Reset preferences
-                    userPreferencesRepository.saveIdPreference(-1L)
+                    userPreferencesRepository.saveIdPreference(0L)
                 }
             } catch (e: Exception) {
                 val msg = "deleteDynamicTheme: Exception during delete: ${e.message}"
                 Log.e(TAG, msg)
                 onException(msg)
             }
+        }
+    }
+
+    fun resetState() {
+        _uiState.value = DynamicThemeUiState()
+        if (isPreferenceState) {
+            // Reset preferences
+            setIdPreference(0L)
         }
     }
 
@@ -239,7 +247,7 @@ open class DynamicThemeViewModel(
 }
 
 data class DynamicThemeUiState(
-    val id: Long = -1L,
+    val id: Long = 0L,
     val name: String = "",
     val sourceColorArgb: Int = 0,
     val uiColorSchemeVariant: UiColorSchemeVariant = UiColorSchemeVariant.TonalSpot,
@@ -292,7 +300,7 @@ data class DynamicThemeUiState(
         fun createDynamicThemeUiState(
             sourceColorArgb: Int,
             windowWidthSizeClass: WindowWidthSizeClass,
-            id: Long = -1L,
+            id: Long = 0L,
             name: String = "",
             uiColorSchemeVariant: UiColorSchemeVariant = UiColorSchemeVariant.TonalSpot,
         ): DynamicThemeUiState {

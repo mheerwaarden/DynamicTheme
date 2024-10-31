@@ -21,7 +21,7 @@ import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 import dynamiccolor.Variant
 
 data class UserPreferences(
-    val id: Long = -1L,
+    val id: Long = 0L,
     val name: String = "",
     val sourceColor: Int = -0xbd7a0c, // Default to Google Blue
     val dynamicSchemeVariant: Variant = Variant.TONAL_SPOT,

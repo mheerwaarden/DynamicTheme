@@ -38,13 +38,13 @@ class UserPreferencesDataStoreRepository(
     private val dataStore: DataStore<Preferences>,
 ) : UserPreferencesRepository {
     override suspend fun saveIdPreference(id: Long): Preferences = dataStore.edit { settings ->
-                // Set id and reset the other values to default
-                val defaultPreferences = UserPreferences()
+        // Set id and reset the other values to default
+        val defaultPreferences = UserPreferences()
         settings[ID] = id
         settings[NAME] = defaultPreferences.name
         settings[SOURCE_COLOR] = defaultPreferences.sourceColor
         settings[COLOR_SCHEME_VARIANT] = defaultPreferences.dynamicSchemeVariant.ordinal
-            }
+    }
 
     override suspend fun saveNamePreference(name: String): Preferences =
             dataStore.edit { settings -> settings[NAME] = name }
@@ -55,26 +55,26 @@ class UserPreferencesDataStoreRepository(
     ): Preferences = dataStore.edit { settings ->
         settings[SOURCE_COLOR] = color
         settings[COLOR_SCHEME_VARIANT] = colorSchemeVariant.ordinal
-            }
+    }
 
     override val preferences: Flow<UserPreferences> = dataStore.data.catch {
-            if (it is IOException) {
-                Log.e(TAG, "Error reading preferences.", it)
-                emit(emptyPreferences())
-            } else {
-                throw it
-            }
-        }.map { settings ->
-        Log.d(TAG, "UserPreferencesDataStoreRepository: settings = $settings")
-            val defaultPreferences = UserPreferences()
-            UserPreferences(
-                id = settings[ID] ?: defaultPreferences.id,
-                name = settings[NAME] ?: defaultPreferences.name,
-                sourceColor = settings[SOURCE_COLOR] ?: defaultPreferences.sourceColor,
-                dynamicSchemeVariant = Variant.entries[settings[COLOR_SCHEME_VARIANT]
-                        ?: defaultPreferences.dynamicSchemeVariant.ordinal]
-            )
+        if (it is IOException) {
+            Log.e(TAG, "Error reading preferences.", it)
+            emit(emptyPreferences())
+        } else {
+            throw it
         }
+    }.map { settings ->
+        Log.d(TAG, "UserPreferencesDataStoreRepository: settings = $settings")
+        val defaultPreferences = UserPreferences()
+        UserPreferences(
+            id = settings[ID] ?: defaultPreferences.id,
+            name = settings[NAME] ?: defaultPreferences.name,
+            sourceColor = settings[SOURCE_COLOR] ?: defaultPreferences.sourceColor,
+            dynamicSchemeVariant = Variant.entries[settings[COLOR_SCHEME_VARIANT]
+                    ?: defaultPreferences.dynamicSchemeVariant.ordinal]
+        )
+    }
 
     private companion object {
         val ID = longPreferencesKey("id")

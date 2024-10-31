@@ -97,7 +97,7 @@ object ImagePickerDestination : NavigationDestination {
 @Composable
 fun ImagePickerScreen(
     themeState: DynamicThemeUiState,
-    onResetPreferences: () -> Unit,
+    onResetState: () -> Unit,
     onUpdateColorScheme: (Int, UiColorSchemeVariant) -> Unit,
     navigateToThemeChooser: () -> Unit,
     navigateBack: () -> Unit,
@@ -145,7 +145,7 @@ fun ImagePickerScreen(
                 viewModel.updateState(context, uri)
             },
             onSelectColor = { color ->
-                onResetPreferences()
+                onResetState()
                 onUpdateColorScheme(color, themeState.uiColorSchemeVariant)
                 navigateToThemeChooser()
             },
@@ -319,7 +319,7 @@ fun ImagePickerScreenPreview() {
     DynamicThemeAppTheme {
         ImagePickerScreen(
             themeState = DynamicThemeUiState(),
-            onResetPreferences = {},
+            onResetState = {},
             onUpdateColorScheme = { _, _ -> },
             navigateToThemeChooser = {},
             navigateBack = {}

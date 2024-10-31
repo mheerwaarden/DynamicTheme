@@ -44,7 +44,7 @@ import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 fun DynamicThemeNavHost(
     navController: NavHostController,
     themeState: DynamicThemeUiState,
-    onResetPreferences: () -> Unit,
+    onResetState: () -> Unit,
     onNameChange: (String) -> Unit,
     onColorSchemeChange: (Int, UiColorSchemeVariant) -> Unit,
     onSave: () -> Unit,
@@ -72,7 +72,7 @@ fun DynamicThemeNavHost(
         composable(route = ImagePickerDestination.route) {
             ImagePickerScreen(
                 themeState = themeState,
-                onResetPreferences = onResetPreferences,
+                onResetState = onResetState,
                 onUpdateColorScheme = onColorSchemeChange,
                 navigateToThemeChooser = { navController.navigate(ColorSchemeVariantDestination.route) },
                 navigateBack = { navController.popBackStack() }
