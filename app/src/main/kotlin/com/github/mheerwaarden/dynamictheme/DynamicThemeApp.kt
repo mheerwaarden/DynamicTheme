@@ -19,17 +19,9 @@ package com.github.mheerwaarden.dynamictheme
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -42,21 +34,16 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
-import com.github.mheerwaarden.dynamictheme.ui.LoadingState
-import com.github.mheerwaarden.dynamictheme.ui.ProgressIndicator
 import com.github.mheerwaarden.dynamictheme.ui.navigation.DynamicThemeNavHost
+import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
 
@@ -69,49 +56,28 @@ fun DynamicThemeApp(
     themeViewModel: DynamicThemeViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val context = LocalContext.current
-    when (val result = themeViewModel.loadingState) {
-        is LoadingState.Loading -> {
-            /* Show progress indicator */
-            Log.d(APP_TAG, "DynamicThemeApp: Busy loading theme")
-            ProgressScreen(action = stringResource(R.string.loading))
-        }
+    LoadingScreen(loadingViewModel = themeViewModel, modifier = modifier) {
+        // Prepare theme view model
+        themeViewModel.updateWindowSizeClass(windowSizeClass)
+        themeViewModel.onException =
+                { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
 
-        is LoadingState.Success -> {
-            /* UiState is updated successfully, display data */
-            Log.d(APP_TAG, "DynamicThemeApp: Success loading theme")
+        val themeState by themeViewModel.uiState.collectAsState()
+        Log.d(
+            APP_TAG,
+            "DynamicThemeApp: Using theme ${themeState.name} from color ${themeState.sourceColorArgb} and variant ${themeState.uiColorSchemeVariant}"
+        )
 
-            // Prepare theme view model
-            themeViewModel.updateWindowSizeClass(windowSizeClass)
-            themeViewModel.onException = { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
-
-            val themeState by themeViewModel.uiState.collectAsState()
-            Log.d(
-                APP_TAG,
-                "DynamicThemeApp: Using theme ${themeState.name} from color ${themeState.sourceColorArgb} and variant ${themeState.uiColorSchemeVariant}"
-            )
-
-            DynamicThemeAppScreen(themeState = themeState,
-                onResetState = { themeViewModel.resetState() },
-                onNameChange = { name -> themeViewModel.updateName(name) },
-                onColorSchemeChange = { sourceColorArgb, uiColorSchemeVariant ->
-                    themeViewModel.updateColorScheme(sourceColorArgb, uiColorSchemeVariant)
-                },
-                onSave = { themeViewModel.upsertDynamicTheme() },
-                modifier = modifier
-            )
-        }
-
-        is LoadingState.Failure -> {
-            /* Handle error */
-            Log.d(APP_TAG, "DynamicThemeApp: Error loading theme")
-            ErrorScreen(
-                message = result.error.message ?: stringResource(R.string.unknown_error),
-                retryAction = { themeViewModel.updateFromPreferences() },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .wrapContentSize(Alignment.Center)
-            )
-        }
+        DynamicThemeAppScreen(
+            themeState = themeState,
+            onResetState = { themeViewModel.resetState() },
+            onNameChange = { name -> themeViewModel.updateName(name) },
+            onColorSchemeChange = { sourceColorArgb, uiColorSchemeVariant ->
+                themeViewModel.updateColorScheme(sourceColorArgb, uiColorSchemeVariant)
+            },
+            onSave = { themeViewModel.upsertDynamicTheme() },
+            modifier = modifier
+        )
     }
 }
 
@@ -172,30 +138,3 @@ fun DynamicThemeTopAppBar(
     )
 }
 
-@Composable
-private fun ProgressScreen(action: String) {
-    ProgressIndicator(
-        action = action, modifier = Modifier
-            .fillMaxSize()
-            .wrapContentSize(Alignment.Center)
-    )
-}
-
-@Composable
-fun ErrorScreen(message: String, retryAction: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_broken_image),
-            contentDescription = stringResource(R.string.error),
-            modifier = Modifier.size(dimensionResource(R.dimen.error_image_size))
-        )
-        Text(text = message, modifier = Modifier.padding(16.dp))
-        Button(onClick = retryAction) {
-            Text(stringResource(R.string.retry))
-        }
-    }
-}

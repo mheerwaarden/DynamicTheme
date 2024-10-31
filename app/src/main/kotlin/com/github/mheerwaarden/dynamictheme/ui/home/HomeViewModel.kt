@@ -17,11 +17,11 @@
 
 package com.github.mheerwaarden.dynamictheme.ui.home
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicThemeRepository
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel.Companion.TIMEOUT_MILLIS
+import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -30,12 +30,18 @@ import kotlinx.coroutines.flow.stateIn
  * ViewModel to retrieve all dynamicThemes in the Room database.
  */
 class HomeViewModel(
-    dynamicThemesRepository: DynamicThemeRepository,
-) : ViewModel() {
-    val uiState: StateFlow<List<DynamicTheme>> =
-            dynamicThemesRepository.getAllDynamicThemesStream().stateIn(
+    private val dynamicThemesRepository: DynamicThemeRepository,
+) : LoadingViewModel() {
+    lateinit var homeState: StateFlow<List<DynamicTheme>>
+
+    override suspend fun loadState() {
+        homeState =
+                dynamicThemesRepository.getAllDynamicThemesStream().stateIn(
                     scope = viewModelScope,
                     started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
                     initialValue = listOf()
                 )
+
+    }
+
 }

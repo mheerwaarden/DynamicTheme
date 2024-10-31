@@ -23,10 +23,6 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
@@ -36,26 +32,19 @@ import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferencesRepo
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState.Companion.createDynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState.Companion.fromDynamicTheme
+import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingViewModel
 import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 import com.github.mheerwaarden.dynamictheme.ui.theme.DarkColorScheme
 import com.github.mheerwaarden.dynamictheme.ui.theme.LightColorScheme
 import dynamiccolor.Variant
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 
 private const val TAG = APP_TAG + "_DynamicThemeViewModel"
-
-sealed interface LoadingState {
-    data object Loading : LoadingState
-    data object Success : LoadingState
-    data class Failure(val error: Throwable) : LoadingState
-}
 
 /**
  * A view model that is used in all the steps to select a color and a scheme variant
@@ -65,52 +54,35 @@ open class DynamicThemeViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val isPreferenceState: Boolean = true,
     var onException: (String) -> Unit = { _ -> },
-) : ViewModel() {
+) : LoadingViewModel() {
 
     protected val _uiState = MutableStateFlow(DynamicThemeUiState())
     val uiState: StateFlow<DynamicThemeUiState> = _uiState.asStateFlow()
 
-    var loadingState: LoadingState by mutableStateOf(LoadingState.Loading)
-
-    init {
-        updateFromPreferences()
-    }
-
-    fun updateFromPreferences() {
-        loadingState = LoadingState.Loading
-        viewModelScope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    val preferences = userPreferencesRepository.preferences.first()
-                    _uiState.value = if (preferences.id < 0) {
-                        // Initialize from preference values
-                        createDynamicThemeUiState(
-                            id = preferences.id,
-                            name = preferences.name,
-                            sourceColorArgb = preferences.sourceColor,
-                            uiColorSchemeVariant = UiColorSchemeVariant.fromVariant(preferences.dynamicSchemeVariant),
-                            windowWidthSizeClass = _uiState.value.windowWidthSizeClass
-                        )
-                    } else {
-                        // Initialize from database values
-                        val theme = dynamicThemeRepository.getDynamicTheme(preferences.id)
-                        if (theme == null) {
-                            createDynamicThemeUiState(
-                                id = -1,
-                                name = preferences.name,
-                                sourceColorArgb = preferences.sourceColor,
-                                uiColorSchemeVariant = UiColorSchemeVariant.fromVariant(preferences.dynamicSchemeVariant),
-                                windowWidthSizeClass = _uiState.value.windowWidthSizeClass
-                            )
-                        } else {
-                            fromDynamicTheme(theme)
-                        }
-                    }
-                }
-                loadingState = LoadingState.Success
-            } catch (e: Exception) {
-                Log.e(TAG, "updateFromPreferences: Exception during update: ${e.message}")
-                loadingState = LoadingState.Failure(e)
+    override suspend fun loadState() {
+        val preferences = userPreferencesRepository.preferences.first()
+        _uiState.value = if (preferences.id < 0) {
+            // Initialize from preference values
+            createDynamicThemeUiState(
+                id = preferences.id,
+                name = preferences.name,
+                sourceColorArgb = preferences.sourceColor,
+                uiColorSchemeVariant = UiColorSchemeVariant.fromVariant(preferences.dynamicSchemeVariant),
+                windowWidthSizeClass = _uiState.value.windowWidthSizeClass
+            )
+        } else {
+            // Initialize from database values
+            val theme = dynamicThemeRepository.getDynamicTheme(preferences.id)
+            if (theme == null) {
+                createDynamicThemeUiState(
+                    id = -1,
+                    name = preferences.name,
+                    sourceColorArgb = preferences.sourceColor,
+                    uiColorSchemeVariant = UiColorSchemeVariant.fromVariant(preferences.dynamicSchemeVariant),
+                    windowWidthSizeClass = _uiState.value.windowWidthSizeClass
+                )
+            } else {
+                fromDynamicTheme(theme)
             }
         }
     }

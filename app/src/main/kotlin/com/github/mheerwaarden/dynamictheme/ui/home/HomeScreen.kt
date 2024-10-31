@@ -50,6 +50,7 @@ import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
+import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.ThemeCard
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
 
@@ -70,7 +71,6 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     homeViewModel: HomeViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
-    val uiState by homeViewModel.uiState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     Scaffold(
@@ -95,12 +95,16 @@ fun HomeScreen(
             }
         },
     ) { innerPadding ->
-        HomeListScreen(
-            themeState = themeState,
-            dynamicThemeList = uiState,
-            navigateToDetail = navigateToDetail,
-            modifier = Modifier.padding(innerPadding)
-        )
+        LoadingScreen(loadingViewModel = homeViewModel, modifier = Modifier.padding(innerPadding)) {
+            val homeState by homeViewModel.homeState.collectAsState()
+            HomeListScreen(
+                themeState = themeState,
+                dynamicThemeList = homeState,
+                navigateToDetail = navigateToDetail,
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+
     }
 }
 
