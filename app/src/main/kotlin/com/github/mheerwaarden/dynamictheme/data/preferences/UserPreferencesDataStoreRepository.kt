@@ -27,8 +27,10 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.github.mheerwaarden.dynamictheme.APP_TAG
 import dynamiccolor.Variant
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
@@ -57,24 +59,28 @@ class UserPreferencesDataStoreRepository(
         settings[COLOR_SCHEME_VARIANT] = colorSchemeVariant.ordinal
     }
 
-    override val preferences: Flow<UserPreferences> = dataStore.data.catch {
-        if (it is IOException) {
-            Log.e(TAG, "Error reading preferences.", it)
-            emit(emptyPreferences())
-        } else {
-            throw it
+    @OptIn(FlowPreview::class)
+    override val preferences: Flow<UserPreferences> = dataStore.data
+        // Do not update while the user is typing
+        .debounce(300)
+        .catch {
+            if (it is IOException) {
+                Log.e(TAG, "Error reading preferences.", it)
+                emit(emptyPreferences())
+            } else {
+                throw it
+            }
+        }.map { settings ->
+            Log.d(TAG, "UserPreferencesDataStoreRepository: settings = $settings")
+            val defaultPreferences = UserPreferences()
+            UserPreferences(
+                id = settings[ID] ?: defaultPreferences.id,
+                name = settings[NAME] ?: defaultPreferences.name,
+                sourceColor = settings[SOURCE_COLOR] ?: defaultPreferences.sourceColor,
+                dynamicSchemeVariant = Variant.entries[settings[COLOR_SCHEME_VARIANT]
+                        ?: defaultPreferences.dynamicSchemeVariant.ordinal]
+            )
         }
-    }.map { settings ->
-        Log.d(TAG, "UserPreferencesDataStoreRepository: settings = $settings")
-        val defaultPreferences = UserPreferences()
-        UserPreferences(
-            id = settings[ID] ?: defaultPreferences.id,
-            name = settings[NAME] ?: defaultPreferences.name,
-            sourceColor = settings[SOURCE_COLOR] ?: defaultPreferences.sourceColor,
-            dynamicSchemeVariant = Variant.entries[settings[COLOR_SCHEME_VARIANT]
-                    ?: defaultPreferences.dynamicSchemeVariant.ordinal]
-        )
-    }
 
     private companion object {
         val ID = longPreferencesKey("id")

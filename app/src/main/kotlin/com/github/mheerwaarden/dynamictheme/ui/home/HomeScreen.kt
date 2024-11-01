@@ -25,7 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -66,6 +66,7 @@ object HomeDestination : NavigationDestination {
 @Composable
 fun HomeScreen(
     themeState: DynamicThemeUiState,
+    onDelete: (Long) -> Unit,
     navigateToImagePicker: () -> Unit,
     navigateToDetail: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -89,7 +90,7 @@ fun HomeScreen(
                 modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_large))
             ) {
                 Icon(
-                    imageVector = Icons.Default.Add,
+                    imageVector = Icons.Outlined.Add,
                     contentDescription = stringResource(R.string.add_theme)
                 )
             }
@@ -100,6 +101,7 @@ fun HomeScreen(
             HomeListScreen(
                 themeState = themeState,
                 dynamicThemeList = homeState,
+                onDelete = onDelete,
                 navigateToDetail = navigateToDetail,
                 modifier = Modifier.padding(innerPadding)
             )
@@ -112,6 +114,7 @@ fun HomeScreen(
 private fun HomeListScreen(
     themeState: DynamicThemeUiState,
     dynamicThemeList: List<DynamicTheme>,
+    onDelete: (Long) -> Unit,
     navigateToDetail: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -123,11 +126,14 @@ private fun HomeListScreen(
         val latestTheme = dynamicThemeList.getTheme(themeState.id) ?: themeState.toDynamicTheme()
         item {
             Log.d(APP_TAG, "HomeListScreen: latest theme ${latestTheme.id} - ${latestTheme.name}")
-            ThemeCard(dynamicTheme = latestTheme,
+            ThemeCard(
+                dynamicTheme = latestTheme,
+                onDelete = onDelete,
                 modifier = Modifier
                     .padding(dimensionResource(R.dimen.padding_small))
                     .fillMaxWidth()
-                    .clickable { navigateToDetail(latestTheme.id) })
+                    .clickable { navigateToDetail(latestTheme.id) }
+            )
         }
         if (dynamicThemeList.isEmpty()) {
             item {
@@ -140,11 +146,14 @@ private fun HomeListScreen(
             items(items = dynamicThemeList, key = { it.id }) { theme ->
                 if (theme.id != latestTheme.id) {
                     Log.d(APP_TAG, "HomeListScreen: saved theme ${theme.id} - ${theme.name}")
-                    ThemeCard(dynamicTheme = theme,
+                    ThemeCard(
+                        dynamicTheme = theme,
+                        onDelete = onDelete,
                         modifier = Modifier
                             .padding(dimensionResource(R.dimen.padding_small))
                             .fillMaxWidth()
-                            .clickable { navigateToDetail(theme.id) })
+                            .clickable { navigateToDetail(theme.id) }
+                    )
                 }
             }
         }
@@ -167,6 +176,7 @@ fun HomeBodyPreview() {
         HomeListScreen(
             themeState = DynamicThemeUiState(),
             dynamicThemeList = emptyList(),
+            onDelete = {},
             navigateToDetail = {},
         )
     }

@@ -76,6 +76,7 @@ fun DynamicThemeApp(
                 themeViewModel.updateColorScheme(sourceColorArgb, uiColorSchemeVariant)
             },
             onSave = { themeViewModel.upsertDynamicTheme() },
+            onDelete = { id -> themeViewModel.deleteDynamicTheme(id) },
             modifier = modifier
         )
     }
@@ -88,9 +89,10 @@ fun DynamicThemeAppScreen(
     onNameChange: (String) -> Unit,
     onColorSchemeChange: (Int, UiColorSchemeVariant) -> Unit,
     onSave: () -> Unit,
+    onDelete: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    DynamicThemeAppTheme() {
+    DynamicThemeAppTheme {
         val navController = rememberNavController()
 
         DynamicThemeNavHost(
@@ -100,6 +102,7 @@ fun DynamicThemeAppScreen(
             onNameChange = onNameChange,
             onColorSchemeChange = onColorSchemeChange,
             onSave = onSave,
+            onDelete = onDelete,
             modifier = modifier
         )
     }

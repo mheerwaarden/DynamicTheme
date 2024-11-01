@@ -23,12 +23,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Save
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,7 +37,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.dynamictheme.APP_TAG
@@ -130,7 +128,7 @@ private fun DynamicThemeDetailScreen(
                 navigateUp = navigateBack,
                 actions = {
                     Icon(
-                        imageVector = Icons.Default.Home,
+                        imageVector = Icons.Outlined.Home,
                         contentDescription = stringResource(R.string.home),
                         modifier = Modifier.clickable(onClick = navigateHome)
                     )
@@ -150,23 +148,18 @@ private fun DynamicThemeDetailScreen(
                     mustSave = true
                 },
                 trailingIcon = {
-                    val defaultButtonColors = ButtonDefaults.buttonColors()
-                    val tint =
-                            if (mustSave) defaultButtonColors.contentColor else defaultButtonColors.disabledContentColor
-                    // TODO MH: IconButton
-                    Icon(
-                        imageVector = if (mustSave) Icons.Filled.Save else Icons.Outlined.Save,
-                        contentDescription = stringResource(R.string.save),
-                        tint = tint,
-                        modifier = Modifier.clickable(
-                            enabled = mustSave,
-                            role = Role.Button,
-                            onClick = {
-                                onSave()
-                                mustSave = false
-                            },
+                    IconButton(
+                        onClick = {
+                            onSave()
+                            mustSave = false
+                        },
+                        enabled = mustSave
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Save,
+                            contentDescription = stringResource(R.string.save)
                         )
-                    )
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
             )

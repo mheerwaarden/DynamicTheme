@@ -21,7 +21,7 @@ import android.content.Context
 import android.text.format.DateFormat
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TimePickerLayoutType
@@ -73,7 +73,7 @@ fun TimeField(
         value = time,
         trailingIcon = {
             Icon(
-                imageVector = Icons.Filled.Schedule,
+                imageVector = Icons.Outlined.Schedule,
                 contentDescription = stringResource(R.string.show_time_picker),
             )
         },

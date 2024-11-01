@@ -35,7 +35,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ImageSearch
+import androidx.compose.material.icons.outlined.ImageSearch
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -66,7 +66,9 @@ import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
+import com.github.mheerwaarden.dynamictheme.ui.theme.BlackArgb
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
+import com.github.mheerwaarden.dynamictheme.ui.theme.WhiteArgb
 
 object ImagePickerDestination : NavigationDestination {
     override val route = "image_picker"
@@ -123,7 +125,7 @@ fun ImagePickerScreen(
                 navigateUp = navigateBack,
                 actions = {
                     Icon(
-                        imageVector = Icons.Default.ImageSearch,
+                        imageVector = Icons.Outlined.ImageSearch,
                         contentDescription = stringResource(R.string.image_picker),
                         modifier = Modifier.clickable { browseImageLauncher.launch("image/*") }
                     )
@@ -330,8 +332,8 @@ fun ImagePickerScreenPreview() {
 @Preview(showBackground = true)
 @Composable
 fun SwatchesPreview() {
-    val white = Color.White.toArgb()
-    val black = Color.Black.toArgb()
+    val white = WhiteArgb
+    val black = BlackArgb
     val blue = Color.Blue.toArgb()
     val red = Color.Red.toArgb()
     val green = Color.Green.toArgb()

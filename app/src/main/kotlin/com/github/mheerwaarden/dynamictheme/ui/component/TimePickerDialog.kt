@@ -27,8 +27,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Keyboard
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.outlined.Keyboard
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -100,12 +100,12 @@ fun ShowTimePickerDialog(
             }) {
                 if (isKeyboardInput) {
                     Icon(
-                        Icons.Filled.Schedule,
+                        Icons.Outlined.Schedule,
                         contentDescription = stringResource(R.string.clock)
                     )
                 } else {
                     Icon(
-                        Icons.Filled.Keyboard,
+                        Icons.Outlined.Keyboard,
                         contentDescription = stringResource(R.string.keyboard)
                     )
                 }

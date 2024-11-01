@@ -35,11 +35,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.ArrowDropDown
+import androidx.compose.material.icons.outlined.ArrowDropUp
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -72,12 +74,14 @@ import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
 import com.github.mheerwaarden.dynamictheme.ui.ColorSchemeState
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.component.DateField
 import com.github.mheerwaarden.dynamictheme.ui.component.InputField
 import com.github.mheerwaarden.dynamictheme.ui.component.TimeField
+import com.github.mheerwaarden.dynamictheme.ui.theme.DarkColorScheme
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicMaterialTheme
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
-import com.github.mheerwaarden.dynamictheme.ui.theme.getDefaultColorScheme
+import com.github.mheerwaarden.dynamictheme.ui.theme.LightColorScheme
 import com.github.mheerwaarden.dynamictheme.ui.toColorScheme
 import com.github.mheerwaarden.dynamictheme.ui.toColorSchemeState
 import palettes.TonalPalette
@@ -101,12 +105,8 @@ data class ColorItem(
 fun ThemeShowcaseScreen(
     isHorizontalLayout: Boolean,
     modifier: Modifier = Modifier,
-    lightColorSchemeState: ColorSchemeState = getDefaultColorScheme(
-        darkTheme = false, dynamicColor = false
-    ).toColorSchemeState(),
-    darkColorSchemeState: ColorSchemeState = getDefaultColorScheme(
-        darkTheme = true, dynamicColor = false
-    ).toColorSchemeState(),
+    lightColorSchemeState: ColorSchemeState = LightColorScheme.toColorSchemeState(),
+    darkColorSchemeState: ColorSchemeState = DarkColorScheme.toColorSchemeState(),
 ) {
     DynamicMaterialTheme(colorScheme = lightColorSchemeState.toColorScheme()) {
         ExpandableSections(
@@ -157,14 +157,14 @@ fun ExpandCollapseIcon(isExpanded: Boolean, modifier: Modifier = Modifier) {
     if (isExpanded) {
         // Collapse icon
         Icon(
-            imageVector = Icons.Filled.ArrowDropUp,
+            imageVector = Icons.Outlined.ArrowDropUp,
             contentDescription = stringResource(R.string.collapse),
             modifier = modifier
         )
     } else {
         // Expand icon
         Icon(
-            imageVector = Icons.Filled.ArrowDropDown,
+            imageVector = Icons.Outlined.ArrowDropDown,
             contentDescription = stringResource(R.string.expand),
             modifier = modifier
         )
@@ -306,28 +306,53 @@ private fun colorsLayout() = listOf(
 @Composable
 fun ThemeCard(
     dynamicTheme: DynamicTheme,
+    onDelete: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp), modifier = modifier
+        elevation = CardDefaults.cardElevation(defaultElevation = dimensionResource(R.dimen.card_elevation)),
+        modifier = modifier
     ) {
         Column(
-            verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.animateContentSize(
-                animationSpec = spring(
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier
+                .animateContentSize(
+                    animationSpec = spring(
                         dampingRatio = Spring.DampingRatioNoBouncy,
                         stiffness = Spring.StiffnessMedium
+                    )
                 )
-            )
+                .padding(vertical = 0.dp)
         ) {
-            Text(
-                text = dynamicTheme.name,
-                textAlign = TextAlign.Start,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(
-                    horizontal = dimensionResource(R.dimen.padding_small),
-                    vertical = dimensionResource(R.dimen.padding_very_small)
+            Row(
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = dimensionResource(R.dimen.padding_small),
+                        vertical = dimensionResource(R.dimen.padding_very_small)
+                    )
+            ) {
+                Text(
+                    text = dynamicTheme.name,
+                    textAlign = TextAlign.Start,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(
+                        horizontal = dimensionResource(R.dimen.padding_very_small),
+                        vertical = dimensionResource(R.dimen.padding_very_small)
+                    )
                 )
-            )
+                if (dynamicTheme.id > 0L) {
+                    Spacer(Modifier.weight(1f))
+                    IconButton(onClick = { onDelete(dynamicTheme.id) }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = stringResource(R.string.delete)
+                        )
+                    }
+                }
+            }
             ColorAndVariantChoice(
                 sourceArgb = dynamicTheme.sourceArgb,
                 colorSchemeVariant = stringResource(
@@ -353,7 +378,7 @@ fun ThemeCard(
 fun ColorAndVariantChoice(
     sourceArgb: Int,
     colorSchemeVariant: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -523,14 +548,14 @@ fun ComponentShowcaseScreen() {
                 Row {
                     IconButton(onClick = { /* dummy */ }) {
                         Icon(
-                            imageVector = Icons.Filled.Save,
+                            imageVector = Icons.Outlined.Save,
                             contentDescription = stringResource(R.string.save),
                         )
                     }
                     Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
                     IconButton(onClick = { /* dummy */ }, enabled = false) {
                         Icon(
-                            imageVector = Icons.Filled.Save,
+                            imageVector = Icons.Outlined.Save,
                             contentDescription = stringResource(R.string.save),
                         )
                     }
@@ -554,12 +579,12 @@ fun ComponentShowcaseScreen() {
         item {
             // List Item
             ListItem(headlineContent = { Text("List Item") },
-                leadingContent = { Icon(Icons.Filled.Check, contentDescription = null) })
+                leadingContent = { Icon(Icons.Outlined.Check, contentDescription = null) })
         }
         item {
             // Floating Action Button
             FloatingActionButton(onClick = { /* dummy */ }) {
-                Icon(Icons.Filled.Add, contentDescription = null)
+                Icon(Icons.Outlined.Add, contentDescription = null)
             }
         }
         item {
@@ -586,7 +611,7 @@ fun ComponentShowcaseScreen() {
             )
         }
 
-        // TODO MH: ... add other components ... OutlineButton
+        // TODO MH: ... add other components ...
 
     }
 }
@@ -663,10 +688,14 @@ fun TonalPaletteScreenPreview() {
 fun ThemeShowcaseScreenPreview() {
     DynamicThemeAppTheme {
         ThemeShowcaseScreen(
-            lightColorSchemeState = getDefaultColorScheme(
-                darkTheme = true, dynamicColor = false
-            ).toColorSchemeState(),
+            lightColorSchemeState = DarkColorScheme.toColorSchemeState(),
             isHorizontalLayout = false,
         )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ThemeCardPreview() {
+    ThemeCard(dynamicTheme = DynamicThemeUiState(name = "Preview").toDynamicTheme(), onDelete = { })
 }

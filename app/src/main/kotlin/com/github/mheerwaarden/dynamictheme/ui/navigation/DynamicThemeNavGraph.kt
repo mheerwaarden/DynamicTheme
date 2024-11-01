@@ -48,6 +48,7 @@ fun DynamicThemeNavHost(
     onNameChange: (String) -> Unit,
     onColorSchemeChange: (Int, UiColorSchemeVariant) -> Unit,
     onSave: () -> Unit,
+    onDelete: (Long) -> Unit,
     modifier: Modifier = Modifier,
     startDestination: String = HomeDestination.route,
 ) {
@@ -58,6 +59,7 @@ fun DynamicThemeNavHost(
         composable(route = HomeDestination.route) {
             HomeScreen(
                 themeState = themeState,
+                onDelete = onDelete,
                 navigateToImagePicker = { navController.navigate(ImagePickerDestination.route) },
                 navigateToDetail = {
                     Log.d(APP_TAG + "_Route", "Home -> Detail for ID: $it")

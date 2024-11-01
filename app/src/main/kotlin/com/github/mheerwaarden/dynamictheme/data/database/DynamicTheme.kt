@@ -33,7 +33,8 @@ data class DynamicTheme(
     /**
      * Unique ID for the reminder, doubles as request code for PendingIntent
      */
-    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0L,
     /**
      * Title or name of the theme
      */

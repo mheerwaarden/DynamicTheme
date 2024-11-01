@@ -27,7 +27,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -111,7 +111,7 @@ fun ColorSchemeVariantChooserScreen(
                                 leadingIcon = if (uiColorSchemeVariant == entry) {
                                     {
                                         Icon(
-                                            imageVector = Icons.Filled.Done,
+                                            imageVector = Icons.Outlined.Done,
                                             contentDescription = "Selected theme",
                                             modifier = Modifier.size(FilterChipDefaults.IconSize),
                                         )

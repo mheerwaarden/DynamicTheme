@@ -19,7 +19,7 @@ package com.github.mheerwaarden.dynamictheme.ui.component
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.EditCalendar
+import androidx.compose.material.icons.outlined.EditCalendar
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
@@ -64,7 +64,7 @@ fun DateField(
         value = date,
         trailingIcon = {
             Icon(
-                Icons.Filled.EditCalendar,
+                Icons.Outlined.EditCalendar,
                 contentDescription = stringResource(R.string.show_date_picker),
             )
         },

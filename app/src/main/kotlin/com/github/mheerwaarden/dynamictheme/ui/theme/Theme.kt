@@ -21,39 +21,23 @@ import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
 import com.github.mheerwaarden.dynamictheme.ui.toColorScheme
 import dynamiccolor.Variant
 
-val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
+// Dark scheme based on black
+val DarkColorScheme = ColorExtractor.createDynamicColorScheme(
+    sourceArgb = BlackArgb, schemeVariant = Variant.FIDELITY, isDark = true
+).toColorScheme()
 
-val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
-)
+// Light scheme based on white
+val LightColorScheme = ColorExtractor.createDynamicColorScheme(
+    sourceArgb = WhiteArgb, schemeVariant = Variant.FIDELITY, isDark = false
+).toColorScheme()
 
 /**
  * The theme for the app itself. Since the composed theme is showcased, the theme for the app
@@ -65,7 +49,7 @@ fun DynamicThemeAppTheme(
     content: @Composable () -> Unit,
 ) {
     // Dynamic color, available on Android 12+, is not very useful for this app
-    val colorScheme = getDefaultColorScheme(darkTheme = darkTheme, dynamicColor = false)
+    val colorScheme = getDefaultColorScheme(darkTheme = darkTheme)
 
     MaterialTheme(
         colorScheme = colorScheme,
@@ -89,25 +73,14 @@ fun DynamicMaterialTheme(
 @Composable
 fun getDefaultColorScheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
 ): ColorScheme {
     return when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
-        darkTheme -> {
-            // Dark scheme based on black
-            ColorExtractor.createDynamicColorScheme(
-                sourceArgb = Color.Black.toArgb(), schemeVariant = Variant.FIDELITY, isDark = true
-            ).toColorScheme()
-        }
-        else -> {
-            // Light scheme based on white
-            ColorExtractor.createDynamicColorScheme(
-                sourceArgb = Color.White.toArgb(), schemeVariant = Variant.FIDELITY, isDark = false
-            ).toColorScheme()
-        }
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
     }
 }

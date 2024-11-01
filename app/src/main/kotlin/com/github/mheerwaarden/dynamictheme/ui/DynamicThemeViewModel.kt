@@ -18,11 +18,8 @@
 package com.github.mheerwaarden.dynamictheme.ui
 
 import android.util.Log
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
@@ -36,6 +33,7 @@ import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingViewModel
 import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 import com.github.mheerwaarden.dynamictheme.ui.theme.DarkColorScheme
 import com.github.mheerwaarden.dynamictheme.ui.theme.LightColorScheme
+import com.github.mheerwaarden.dynamictheme.ui.theme.WhiteArgb
 import dynamiccolor.Variant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -165,17 +163,21 @@ open class DynamicThemeViewModel(
         }
     }
 
-    /** Delete the dynamicTheme from the database. */
-    fun deleteDynamicTheme() {
-        if (_uiState.value.id < 0) return
+    /**
+     * Delete the dynamicTheme from the database.
+     * Pass in the id to let the method be used from the home screen.
+     */
+    fun deleteDynamicTheme(id: Long) {
+        if (id < 0) return
 
         viewModelScope.launch {
             try {
-                dynamicThemeRepository.deleteDynamicThemeById(Id(_uiState.value.id))
+                dynamicThemeRepository.deleteDynamicThemeById(Id(id))
                 if (isPreferenceState) {
                     // Reset preferences
                     userPreferencesRepository.saveIdPreference(0L)
                 }
+                Log.d(TAG, "deleteDynamicTheme: DynamicTheme deleted: $id")
             } catch (e: Exception) {
                 val msg = "deleteDynamicTheme: Exception during delete: ${e.message}"
                 Log.e(TAG, msg)
@@ -185,14 +187,14 @@ open class DynamicThemeViewModel(
     }
 
     fun resetState() {
-        _uiState.value = DynamicThemeUiState()
+        _uiState.value = DynamicThemeUiState(windowWidthSizeClass = _uiState.value.windowWidthSizeClass)
         if (isPreferenceState) {
-            // Reset preferences
+            // Resets all preferences
             setIdPreference(0L)
         }
     }
 
-    fun setIdPreference(id: Long) {
+    private fun setIdPreference(id: Long) {
         Log.d(APP_TAG, "DynamicThemeViewModel: Setting id preference: $id")
         viewModelScope.launch {
             userPreferencesRepository.saveIdPreference(id)
@@ -221,13 +223,14 @@ open class DynamicThemeViewModel(
 data class DynamicThemeUiState(
     val id: Long = 0L,
     val name: String = "",
-    val sourceColorArgb: Int = 0,
+    val sourceColorArgb: Int = WhiteArgb,
     val uiColorSchemeVariant: UiColorSchemeVariant = UiColorSchemeVariant.TonalSpot,
     val lightColorSchemeState: ColorSchemeState = LightColorScheme.toColorSchemeState(),
     val darkColorSchemeState: ColorSchemeState = DarkColorScheme.toColorSchemeState(),
 
     val windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact,
 ) {
+
     fun toDynamicTheme(): DynamicTheme = DynamicTheme(
         id = if (id < 0) 0 else id,
         name = name,
@@ -247,13 +250,6 @@ data class DynamicThemeUiState(
         onErrorArgb = lightColorSchemeState.onError,
         timestamp = LocalDateTime.now()
     )
-
-    @Composable
-    fun toColorScheme(): ColorScheme = if (isSystemInDarkTheme()) {
-        darkColorSchemeState.toColorScheme()
-    } else {
-        lightColorSchemeState.toColorScheme()
-    }
 
     fun isHorizontalLayout(): Boolean = windowWidthSizeClass != WindowWidthSizeClass.Compact
 
