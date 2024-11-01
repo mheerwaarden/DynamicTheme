@@ -379,6 +379,7 @@ fun ColorAndVariantChoice(
     sourceArgb: Int,
     colorSchemeVariant: String,
     modifier: Modifier = Modifier,
+    isSmall: Boolean = true
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -391,7 +392,7 @@ fun ColorAndVariantChoice(
             textColor = Color(ColorExtractor.getContrastColorArgb(sourceArgb)),
             backgroundColor = Color(sourceArgb),
             text = stringResource(R.string.source_color),
-            isSmall = true,
+            isSmall = isSmall,
             modifier = Modifier.weight(1f)
         )
         Text(

@@ -49,6 +49,7 @@ import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.ThemeCard
@@ -65,8 +66,7 @@ object HomeDestination : NavigationDestination {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    themeState: DynamicThemeUiState,
-    onDelete: (Long) -> Unit,
+    themeViewModel: DynamicThemeViewModel,
     navigateToImagePicker: () -> Unit,
     navigateToDetail: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -99,9 +99,9 @@ fun HomeScreen(
         LoadingScreen(loadingViewModel = homeViewModel, modifier = Modifier.padding(innerPadding)) {
             val homeState by homeViewModel.homeState.collectAsState()
             HomeListScreen(
-                themeState = themeState,
+                themeState = themeViewModel.uiState,
                 dynamicThemeList = homeState,
-                onDelete = onDelete,
+                onDelete = themeViewModel::deleteDynamicTheme,
                 navigateToDetail = navigateToDetail,
                 modifier = Modifier.padding(innerPadding)
             )

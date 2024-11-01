@@ -17,7 +17,6 @@
 
 package com.github.mheerwaarden.dynamictheme
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
@@ -32,19 +31,15 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
-import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
 import com.github.mheerwaarden.dynamictheme.ui.navigation.DynamicThemeNavHost
 import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingScreen
-import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
 
 const val APP_TAG = "DynamicTheme"
@@ -53,7 +48,7 @@ const val APP_TAG = "DynamicTheme"
 fun DynamicThemeApp(
     windowSizeClass: WindowSizeClass,
     modifier: Modifier = Modifier,
-    themeViewModel: DynamicThemeViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    themeViewModel: DynamicThemeViewModel= viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val context = LocalContext.current
     LoadingScreen(loadingViewModel = themeViewModel, modifier = modifier) {
@@ -62,21 +57,8 @@ fun DynamicThemeApp(
         themeViewModel.onException =
                 { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
 
-        val themeState by themeViewModel.uiState.collectAsState()
-        Log.d(
-            APP_TAG,
-            "DynamicThemeApp: Using theme ${themeState.name} from color ${themeState.sourceColorArgb} and variant ${themeState.uiColorSchemeVariant}"
-        )
-
         DynamicThemeAppScreen(
-            themeState = themeState,
-            onResetState = { themeViewModel.resetState() },
-            onNameChange = { name -> themeViewModel.updateName(name) },
-            onColorSchemeChange = { sourceColorArgb, uiColorSchemeVariant ->
-                themeViewModel.updateColorScheme(sourceColorArgb, uiColorSchemeVariant)
-            },
-            onSave = { themeViewModel.upsertDynamicTheme() },
-            onDelete = { id -> themeViewModel.deleteDynamicTheme(id) },
+            themeViewModel = themeViewModel,
             modifier = modifier
         )
     }
@@ -84,12 +66,7 @@ fun DynamicThemeApp(
 
 @Composable
 fun DynamicThemeAppScreen(
-    themeState: DynamicThemeUiState,
-    onResetState: () -> Unit,
-    onNameChange: (String) -> Unit,
-    onColorSchemeChange: (Int, UiColorSchemeVariant) -> Unit,
-    onSave: () -> Unit,
-    onDelete: (Long) -> Unit,
+    themeViewModel: DynamicThemeViewModel,
     modifier: Modifier = Modifier,
 ) {
     DynamicThemeAppTheme {
@@ -97,12 +74,7 @@ fun DynamicThemeAppScreen(
 
         DynamicThemeNavHost(
             navController = navController,
-            themeState = themeState,
-            onResetState = onResetState,
-            onNameChange = onNameChange,
-            onColorSchemeChange = onColorSchemeChange,
-            onSave = onSave,
-            onDelete = onDelete,
+            themeViewModel = themeViewModel,
             modifier = modifier
         )
     }

@@ -64,7 +64,7 @@ import coil.compose.AsyncImage
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
-import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.dynamictheme.ui.theme.BlackArgb
 import com.github.mheerwaarden.dynamictheme.ui.theme.DynamicThemeAppTheme
@@ -86,34 +86,29 @@ object ImagePickerDestination : NavigationDestination {
  * On the click of a color, the next [ColorSchemeVariantChooserScreen] step is activated to allow the user to
  * select a color scheme based on the selected color.
  *
- * @param themeState The current state of the theme selection.
- * @param onUpdateColorScheme The callback to invoke when to update the color scheme is updated when
- * a color is selected.
  * @param navigateToThemeChooser The callback to invoke to go to the next screen.
  * @param navigateBack The callback to invoke when the user clicks the back button.
  * @param modifier Modifier to be applied to the screen.
- * @param viewModel The view model for this screen, containing the swatches for the colors that are
- * extracted from the image.
+ * @param themeViewModel The view model containing the color state for the current theme.
+ * @param imagePickerViewModel The view model for this screen, containing the swatches for the
+ * colors that are extracted from the image.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImagePickerScreen(
-    themeState: DynamicThemeUiState,
-    onResetState: () -> Unit,
-    onUpdateColorScheme: (Int, UiColorSchemeVariant) -> Unit,
+    themeViewModel: DynamicThemeViewModel,
     navigateToThemeChooser: () -> Unit,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ImagePickerViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    imagePickerViewModel: ImagePickerViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val context = LocalContext.current
-    val uiState = viewModel.uiState
 
     // [GetContent] is an ActivityResultContract that will launch a browser for the filter
     // specified in the launch call
     val browseImageLauncher = rememberLauncherForActivityResult(GetContent()) { uri ->
         if (uri != null) {
-            viewModel.updateState(context, uri)
+            imagePickerViewModel.updateState(context, uri)
         }
     }
 
@@ -140,27 +135,27 @@ fun ImagePickerScreen(
             )
         }, modifier = modifier
     ) { innerPadding ->
+        val themeState = themeViewModel.uiState
         ImagePickerBody(
-            uiState = uiState,
+            imageState = imagePickerViewModel.uiState,
             isHorizontalLayout = themeState.isHorizontalLayout(),
             onSelectImage = { uri ->
-                viewModel.updateState(context, uri)
+                imagePickerViewModel.updateState(context, uri)
             },
             onSelectColor = { color ->
-                onResetState()
-                onUpdateColorScheme(color, themeState.uiColorSchemeVariant)
+                themeViewModel.resetState()
+                // themeState is now stale, so use the viewModel directly
+                themeViewModel.updateColorScheme(color, themeViewModel.uiState.uiColorSchemeVariant)
                 navigateToThemeChooser()
             },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+            modifier = Modifier.fillMaxSize().padding(innerPadding)
         )
     }
 }
 
 @Composable
 private fun ImagePickerBody(
-    uiState: ImagePickerUiState,
+    imageState: ImagePickerUiState,
     isHorizontalLayout: Boolean,
     onSelectImage: (Uri) -> Unit,
     onSelectColor: (Int) -> Unit,
@@ -174,10 +169,10 @@ private fun ImagePickerBody(
             ),
             modifier = modifier.fillMaxSize()
         ) {
-            ImagePicker(uiState.imageUri, onSelectImage, modifier = Modifier.weight(1f))
+            ImagePicker(imageState.imageUri, onSelectImage, modifier = Modifier.weight(1f))
             VerticalDivider()
             Swatches(
-                uiState = uiState,
+                uiState = imageState,
                 onSelectColor = onSelectColor,
                 modifier = Modifier.weight(1f)
             )
@@ -191,10 +186,10 @@ private fun ImagePickerBody(
             ),
             modifier = modifier.fillMaxSize()
         ) {
-            ImagePicker(uiState.imageUri, onSelectImage, modifier = Modifier.weight(1f))
+            ImagePicker(imageState.imageUri, onSelectImage, modifier = Modifier.weight(1f))
             HorizontalDivider()
             Swatches(
-                uiState = uiState,
+                uiState = imageState,
                 onSelectColor = onSelectColor,
                 modifier = Modifier.weight(1f)
             )
@@ -320,9 +315,7 @@ private fun Int.hexString(): String = String.format("#%06X", (0xFFFFFF and this)
 fun ImagePickerScreenPreview() {
     DynamicThemeAppTheme {
         ImagePickerScreen(
-            themeState = DynamicThemeUiState(),
-            onResetState = {},
-            onUpdateColorScheme = { _, _ -> },
+            themeViewModel = viewModel(factory = AppViewModelProvider.Factory),
             navigateToThemeChooser = {},
             navigateBack = {}
         )

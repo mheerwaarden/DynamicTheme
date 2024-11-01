@@ -89,4 +89,5 @@
     <string name="action_busy">%s…</string>
     <string name="retry">Retry</string>
     <string name="delete">Delete</string>
+    <string name="variant">Variant</string>
 </resources>

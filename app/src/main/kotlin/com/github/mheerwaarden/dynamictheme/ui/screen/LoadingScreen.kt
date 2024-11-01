@@ -44,22 +44,23 @@ fun LoadingScreen(
     modifier: Modifier = Modifier,
     successContent: @Composable () -> Unit,
 ) {
+    val msgPrefix = "LoadingScreen for ${loadingViewModel.javaClass.simpleName}:"
     when (val result = loadingViewModel.loadingState) {
         is LoadingState.Loading -> {
             /* Show progress indicator */
-            Log.d(APP_TAG, "LoadingScreen: Busy loading")
+            Log.d(APP_TAG, "$msgPrefix Busy")
             ProgressScreen(action = stringResource(R.string.loading), modifier = modifier)
         }
 
         is LoadingState.Success -> {
             /* UiState is updated successfully, display data */
-            Log.d(APP_TAG, "LoadingScreen: Successful loading")
+            Log.d(APP_TAG, "$msgPrefix Successful")
             successContent()
         }
 
         is LoadingState.Failure -> {
             /* Handle error */
-            Log.d(APP_TAG, "LoadingScreen: Error on load")
+            Log.d(APP_TAG, "$msgPrefix Error")
             ErrorScreen(
                 message = result.error.message ?: stringResource(R.string.unknown_error),
                 retryAction = { loadingViewModel.load() },

@@ -20,6 +20,9 @@ package com.github.mheerwaarden.dynamictheme.ui
 import android.util.Log
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
@@ -35,9 +38,6 @@ import com.github.mheerwaarden.dynamictheme.ui.theme.DarkColorScheme
 import com.github.mheerwaarden.dynamictheme.ui.theme.LightColorScheme
 import com.github.mheerwaarden.dynamictheme.ui.theme.WhiteArgb
 import dynamiccolor.Variant
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -54,30 +54,31 @@ open class DynamicThemeViewModel(
     var onException: (String) -> Unit = { _ -> },
 ) : LoadingViewModel() {
 
-    protected val _uiState = MutableStateFlow(DynamicThemeUiState())
-    val uiState: StateFlow<DynamicThemeUiState> = _uiState.asStateFlow()
+    var uiState by mutableStateOf(DynamicThemeUiState())
+        protected set
 
     override suspend fun loadState() {
+        Log.d(TAG, "loadState")
         val preferences = userPreferencesRepository.preferences.first()
-        _uiState.value = if (preferences.id < 0) {
+        uiState = if (preferences.id <= 0) {
             // Initialize from preference values
             createDynamicThemeUiState(
                 id = preferences.id,
                 name = preferences.name,
                 sourceColorArgb = preferences.sourceColor,
                 uiColorSchemeVariant = UiColorSchemeVariant.fromVariant(preferences.dynamicSchemeVariant),
-                windowWidthSizeClass = _uiState.value.windowWidthSizeClass
+                windowWidthSizeClass = uiState.windowWidthSizeClass
             )
         } else {
             // Initialize from database values
             val theme = dynamicThemeRepository.getDynamicTheme(preferences.id)
             if (theme == null) {
                 createDynamicThemeUiState(
-                    id = -1,
+                    id = 0L,
                     name = preferences.name,
                     sourceColorArgb = preferences.sourceColor,
                     uiColorSchemeVariant = UiColorSchemeVariant.fromVariant(preferences.dynamicSchemeVariant),
-                    windowWidthSizeClass = _uiState.value.windowWidthSizeClass
+                    windowWidthSizeClass = uiState.windowWidthSizeClass
                 )
             } else {
                 fromDynamicTheme(theme)
@@ -87,14 +88,14 @@ open class DynamicThemeViewModel(
 
     fun updateWindowSizeClass(newWindowSizeClass: WindowSizeClass) {
         // Update only after reconfiguration
-        if (_uiState.value.windowWidthSizeClass != newWindowSizeClass.widthSizeClass) {
-            _uiState.value =
-                    _uiState.value.copy(windowWidthSizeClass = newWindowSizeClass.widthSizeClass)
+        if (uiState.windowWidthSizeClass != newWindowSizeClass.widthSizeClass) {
+            uiState =
+                    uiState.copy(windowWidthSizeClass = newWindowSizeClass.widthSizeClass)
         }
     }
 
     fun updateName(newName: String) {
-        _uiState.value = _uiState.value.copy(name = newName)
+        uiState = uiState.copy(name = newName)
         if (isPreferenceState) {
             setNamePreference(newName)
         }
@@ -104,12 +105,12 @@ open class DynamicThemeViewModel(
         sourceColorArgb: Int,
         uiColorSchemeVariant: UiColorSchemeVariant = UiColorSchemeVariant.TonalSpot,
     ) {
-        _uiState.value = createDynamicThemeUiState(
-            id = _uiState.value.id,
-            name = _uiState.value.name,
+        uiState = createDynamicThemeUiState(
+            id = uiState.id,
+            name = uiState.name,
             sourceColorArgb = sourceColorArgb,
             uiColorSchemeVariant = uiColorSchemeVariant,
-            windowWidthSizeClass = _uiState.value.windowWidthSizeClass
+            windowWidthSizeClass = uiState.windowWidthSizeClass
         )
         if (isPreferenceState) {
             setSourceColorPreference(
@@ -120,7 +121,7 @@ open class DynamicThemeViewModel(
 
     /** Insert the dynamicTheme in the database if it does not exist yet, otherwise update it. */
     fun upsertDynamicTheme() {
-        if (_uiState.value.id < 0) {
+        if (uiState.id <= 0) {
             insertDynamicTheme()
         } else {
             updateDynamicTheme()
@@ -132,8 +133,8 @@ open class DynamicThemeViewModel(
         viewModelScope.launch {
             try {
                 val newId =
-                        dynamicThemeRepository.insertDynamicTheme(_uiState.value.toDynamicTheme())
-                _uiState.value = _uiState.value.copy(id = newId)
+                        dynamicThemeRepository.insertDynamicTheme(uiState.toDynamicTheme())
+                uiState = uiState.copy(id = newId)
                 if (isPreferenceState) {
                     setIdPreference(newId)
                 }
@@ -150,13 +151,13 @@ open class DynamicThemeViewModel(
     private fun updateDynamicTheme() {
         viewModelScope.launch {
             try {
-                dynamicThemeRepository.updateDynamicTheme(_uiState.value.toDynamicTheme())
+                dynamicThemeRepository.updateDynamicTheme(uiState.toDynamicTheme())
                 Log.d(
                     TAG,
-                    "updateAddDynamicTheme: DynamicTheme updated: " + "${_uiState.value.id} ${_uiState.value.name}"
+                    "updateDynamicTheme: DynamicTheme updated: " + "${uiState.id} - ${uiState.name}"
                 )
             } catch (e: Exception) {
-                val msg = "updateAddDynamicTheme: Exception during insert: ${e.message}"
+                val msg = "updateDynamicTheme: Exception during insert: ${e.message}"
                 Log.e(TAG, msg)
                 onException(msg)
             }
@@ -187,7 +188,8 @@ open class DynamicThemeViewModel(
     }
 
     fun resetState() {
-        _uiState.value = DynamicThemeUiState(windowWidthSizeClass = _uiState.value.windowWidthSizeClass)
+        Log.d(TAG, "resetState")
+        uiState = DynamicThemeUiState(windowWidthSizeClass = uiState.windowWidthSizeClass)
         if (isPreferenceState) {
             // Resets all preferences
             setIdPreference(0L)

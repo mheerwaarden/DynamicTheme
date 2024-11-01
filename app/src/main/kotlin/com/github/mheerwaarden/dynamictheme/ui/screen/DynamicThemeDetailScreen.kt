@@ -19,7 +19,9 @@ package com.github.mheerwaarden.dynamictheme.ui.screen
 
 import android.util.Log
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -30,11 +32,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,20 +67,19 @@ object DynamicThemeDetailDestination : NavigationDestination {
  */
 @Composable
 fun DynamicThemeDetailScreen(
-    isHorizontalLayout: Boolean,
+    themeViewModel: DynamicThemeViewModel,
     navigateHome: () -> Unit,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
     // Extension of the DynamicThemeViewModel with ID, isHorizontalLayout not initialised
-    viewModel: DynamicThemeDetailViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    detailViewModel: DynamicThemeDetailViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
-    val themeState = viewModel.uiState.collectAsState().value
     DynamicThemeDetailScreen(
-        themeState = themeState,
-        isHorizontalLayout = isHorizontalLayout,
+        themeState = detailViewModel.uiState,
+        isHorizontalLayout = themeViewModel.uiState.isHorizontalLayout(),
         isChanged = false,
-        onNameChange = viewModel::updateName,
-        onSave = viewModel::upsertDynamicTheme,
+        onNameChange = detailViewModel::updateName,
+        onSave = detailViewModel::upsertDynamicTheme,
         navigateHome = navigateHome,
         navigateBack = navigateBack,
         modifier = modifier
@@ -87,20 +88,19 @@ fun DynamicThemeDetailScreen(
 
 /** Entry route for a Dynamic Theme detail that has not been saved to the database. */
 @Composable
-fun DynamicThemeDetailScreen(
-    themeState: DynamicThemeUiState,
-    onNameChange: (String) -> Unit,
-    onSave: () -> Unit,
+fun LatestDetailScreen(
+    themeViewModel: DynamicThemeViewModel,
     navigateHome: () -> Unit,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val themeState = themeViewModel.uiState
     DynamicThemeDetailScreen(
         themeState = themeState,
         isHorizontalLayout = themeState.isHorizontalLayout(),
         isChanged = true,
-        onNameChange = onNameChange,
-        onSave = onSave,
+        onNameChange = themeViewModel::updateName,
+        onSave = themeViewModel::upsertDynamicTheme,
         navigateHome = navigateHome,
         navigateBack = navigateBack,
         modifier = modifier
@@ -139,34 +139,20 @@ private fun DynamicThemeDetailScreen(
     ) { innerPadding ->
         Log.d(TAG, "DynamicThemeDetailScreen: name ${themeState.name} changed $isChanged")
         Column(modifier = Modifier.padding(innerPadding)) {
-            InputField(
-                labelId = R.string.name,
-                value = themeState.name,
-                singleLine = true,
-                onValueChange = {
+            Log.d(TAG, "DynamicThemeDetailScreen: Color ${themeState.sourceColorArgb} Variant ${themeState.uiColorSchemeVariant}")
+            ThemeDescription(
+                themeState = themeState,
+                mustSave = mustSave,
+                isHorizontalLayout = isHorizontalLayout,
+                onNameChange = {
                     onNameChange(it)
                     mustSave = true
                 },
-                trailingIcon = {
-                    IconButton(
-                        onClick = {
-                            onSave()
-                            mustSave = false
-                        },
-                        enabled = mustSave
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Save,
-                            contentDescription = stringResource(R.string.save)
-                        )
-                    }
+                onSave = {
+                    onSave()
+                    mustSave = false
                 },
-                modifier = Modifier.fillMaxWidth(),
-            )
-            Log.d(TAG, "DynamicThemeDetailScreen: Color ${themeState.sourceColorArgb} Variant ${themeState.uiColorSchemeVariant}")
-            ColorAndVariantChoice(
-                sourceArgb = themeState.sourceColorArgb,
-                colorSchemeVariant = stringResource(themeState.uiColorSchemeVariant.nameResId)
+                modifier = Modifier.fillMaxWidth()
             )
             ThemeShowcaseScreen(
                 isHorizontalLayout = isHorizontalLayout,
@@ -179,23 +165,95 @@ private fun DynamicThemeDetailScreen(
 }
 
 @Composable
-@Preview(showBackground = true)
-fun DetailScreenVerticalPreview() {
-    DynamicThemeDetailScreen(themeState = DynamicThemeUiState(name = "Vertical preview"),
-        onNameChange = {},
-        onSave = {},
-        navigateHome = {},
-        navigateBack = {}
-    )
+private fun ThemeDescription(
+    themeState: DynamicThemeUiState,
+    mustSave: Boolean,
+    isHorizontalLayout: Boolean,
+    onNameChange: (String) -> Unit,
+    onSave: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (isHorizontalLayout) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
+        ) {
+            ColorAndVariantChoice(
+                sourceArgb = themeState.sourceColorArgb,
+                colorSchemeVariant = stringResource(themeState.uiColorSchemeVariant.nameResId),
+                isSmall = false,
+                modifier = Modifier.weight(1f),
+            )
+            InputField(
+                labelId = R.string.name,
+                value = themeState.name,
+                singleLine = true,
+                onValueChange = {
+                    onNameChange(it)
+                },
+                trailingIcon = {
+                    IconButton(onClick = onSave, enabled = mustSave) {
+                        Icon(
+                            imageVector = Icons.Outlined.Save,
+                            contentDescription = stringResource(R.string.save)
+                        )
+                    }
+                },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    } else {
+        ColorAndVariantChoice(
+            sourceArgb = themeState.sourceColorArgb,
+            colorSchemeVariant = stringResource(themeState.uiColorSchemeVariant.nameResId)
+        )
+        InputField(
+            labelId = R.string.name,
+            value = themeState.name,
+            singleLine = true,
+            onValueChange = {
+                onNameChange(it)
+            },
+            trailingIcon = {
+                IconButton(onClick = onSave, enabled = mustSave) {
+                    Icon(
+                        imageVector = Icons.Outlined.Save,
+                        contentDescription = stringResource(R.string.save)
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }
 
 @Composable
-@Preview(showBackground = true)
-fun DetailScreenHorizontalPreview() {
-    DynamicThemeDetailScreen(themeState = DynamicThemeUiState(name = "Horizontal preview"),
+@Preview(showBackground = true, name = "Portrait")
+fun DetailScreenVerticalPreview() {
+    DynamicThemeDetailScreen(
+        themeState = DynamicThemeUiState(name = "Vertical preview"),
+        isHorizontalLayout = false,
+        isChanged = false,
         onNameChange = {},
         onSave = {},
         navigateHome = {},
-        navigateBack = {}
-    )
+        navigateBack = {})
+}
+
+@Composable
+@Preview(
+    showBackground = true, name = "Landscape",
+    widthDp = 880,
+    heightDp = 580,
+)
+fun DetailScreenHorizontalPreview() {
+    DynamicThemeDetailScreen(
+        themeState = DynamicThemeUiState(name = "Horizontal preview"),
+        isHorizontalLayout = true,
+        isChanged = false,
+        onNameChange = {},
+        onSave = {},
+        navigateHome = {},
+        navigateBack = {})
 }

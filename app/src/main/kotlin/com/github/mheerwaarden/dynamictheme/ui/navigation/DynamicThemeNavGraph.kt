@@ -26,7 +26,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.github.mheerwaarden.dynamictheme.APP_TAG
-import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeDestination
 import com.github.mheerwaarden.dynamictheme.ui.home.HomeScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.ColorSchemeVariantChooserScreen
@@ -35,7 +35,7 @@ import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeDetailDestinat
 import com.github.mheerwaarden.dynamictheme.ui.screen.DynamicThemeDetailScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.ImagePickerScreen
-import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
+import com.github.mheerwaarden.dynamictheme.ui.screen.LatestDetailScreen
 
 /**
  * Provides Navigation graph for the application.
@@ -43,12 +43,7 @@ import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 @Composable
 fun DynamicThemeNavHost(
     navController: NavHostController,
-    themeState: DynamicThemeUiState,
-    onResetState: () -> Unit,
-    onNameChange: (String) -> Unit,
-    onColorSchemeChange: (Int, UiColorSchemeVariant) -> Unit,
-    onSave: () -> Unit,
-    onDelete: (Long) -> Unit,
+    themeViewModel: DynamicThemeViewModel,
     modifier: Modifier = Modifier,
     startDestination: String = HomeDestination.route,
 ) {
@@ -58,8 +53,6 @@ fun DynamicThemeNavHost(
     ) {
         composable(route = HomeDestination.route) {
             HomeScreen(
-                themeState = themeState,
-                onDelete = onDelete,
                 navigateToImagePicker = { navController.navigate(ImagePickerDestination.route) },
                 navigateToDetail = {
                     Log.d(APP_TAG + "_Route", "Home -> Detail for ID: $it")
@@ -69,32 +62,29 @@ fun DynamicThemeNavHost(
                         navController.navigate("${DynamicThemeDetailDestination.route}/$it")
                     }
                 },
+                themeViewModel = themeViewModel
             )
         }
         composable(route = ImagePickerDestination.route) {
             ImagePickerScreen(
-                themeState = themeState,
-                onResetState = onResetState,
-                onUpdateColorScheme = onColorSchemeChange,
                 navigateToThemeChooser = { navController.navigate(ColorSchemeVariantDestination.route) },
-                navigateBack = { navController.popBackStack() }
+                navigateBack = { navController.popBackStack() },
+                themeViewModel = themeViewModel
             )
         }
         composable(route = ColorSchemeVariantDestination.route) {
             ColorSchemeVariantChooserScreen(
-                themeState = themeState,
-                onUpdateTheme = onColorSchemeChange,
                 navigateToExamples = { navController.navigate(DynamicThemeDetailDestination.route) },
-                navigateBack = { navController.popBackStack() }
+                navigateBack = { navController.popBackStack() },
+                themeViewModel = themeViewModel
             )
         }
         composable(route = DynamicThemeDetailDestination.route) {
-            DynamicThemeDetailScreen(
-                themeState = themeState,
-                onNameChange = onNameChange,
-                onSave = onSave,
+            // Latest detail that has not been saved to the database
+            LatestDetailScreen(
                 navigateHome = { navController.navigate(HomeDestination.route) },
-                navigateBack = { navController.popBackStack() }
+                navigateBack = { navController.popBackStack() },
+                themeViewModel = themeViewModel
             )
         }
         composable(
@@ -104,10 +94,9 @@ fun DynamicThemeNavHost(
             })
         ) {
             // Existing theme in database, no update of preferences
-            DynamicThemeDetailScreen(
-                isHorizontalLayout = themeState.isHorizontalLayout(),
-                navigateHome = { navController.navigate(HomeDestination.route) },
-                navigateBack = { navController.popBackStack() }
+            DynamicThemeDetailScreen(navigateHome = { navController.navigate(HomeDestination.route) },
+                navigateBack = { navController.popBackStack() },
+                themeViewModel = themeViewModel
             )
         }
 

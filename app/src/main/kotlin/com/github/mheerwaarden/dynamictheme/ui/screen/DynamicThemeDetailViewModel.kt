@@ -41,7 +41,9 @@ class DynamicThemeDetailViewModel(
         viewModelScope.launch {
             val dynamicTheme = dynamicThemeRepository.getDynamicTheme(themeId)
             if (dynamicTheme != null) {
-                _uiState.value = DynamicThemeUiState.fromDynamicTheme(dynamicTheme)
+                uiState = DynamicThemeUiState.fromDynamicTheme(
+                    dynamicTheme = dynamicTheme,
+                )
             }
         }
     }
