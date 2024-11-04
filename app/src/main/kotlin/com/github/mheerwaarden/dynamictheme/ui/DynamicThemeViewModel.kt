@@ -28,6 +28,7 @@ import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicThemeRepository
 import com.github.mheerwaarden.dynamictheme.data.database.Id
+import com.github.mheerwaarden.dynamictheme.data.preferences.INVALID
 import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferencesRepository
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState.Companion.createDynamicThemeUiState
@@ -174,10 +175,7 @@ open class DynamicThemeViewModel(
         viewModelScope.launch {
             try {
                 dynamicThemeRepository.deleteDynamicThemeById(Id(id))
-                if (isPreferenceState) {
-                    // Reset preferences
-                    userPreferencesRepository.saveIdPreference(0L)
-                }
+                resetState()
                 Log.d(TAG, "deleteDynamicTheme: DynamicTheme deleted: $id")
             } catch (e: Exception) {
                 val msg = "deleteDynamicTheme: Exception during delete: ${e.message}"
@@ -192,7 +190,14 @@ open class DynamicThemeViewModel(
         uiState = DynamicThemeUiState(windowWidthSizeClass = uiState.windowWidthSizeClass)
         if (isPreferenceState) {
             // Resets all preferences
-            setIdPreference(0L)
+            resetPreference()
+        }
+    }
+
+    private fun resetPreference() {
+        Log.d(APP_TAG, "DynamicThemeViewModel: Resetting preference")
+        viewModelScope.launch {
+            userPreferencesRepository.reset()
         }
     }
 
@@ -223,7 +228,7 @@ open class DynamicThemeViewModel(
 }
 
 data class DynamicThemeUiState(
-    val id: Long = 0L,
+    val id: Long = INVALID,
     val name: String = "",
     val sourceColorArgb: Int = WhiteArgb,
     val uiColorSchemeVariant: UiColorSchemeVariant = UiColorSchemeVariant.TonalSpot,

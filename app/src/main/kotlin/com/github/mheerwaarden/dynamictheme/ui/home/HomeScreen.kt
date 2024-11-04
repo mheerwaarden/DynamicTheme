@@ -47,6 +47,7 @@ import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
+import com.github.mheerwaarden.dynamictheme.data.preferences.INVALID
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
@@ -124,39 +125,38 @@ private fun HomeListScreen(
         modifier = modifier
     ) {
         val latestTheme = dynamicThemeList.getTheme(themeState.id) ?: themeState.toDynamicTheme()
-        item {
-            Log.d(APP_TAG, "HomeListScreen: latest theme ${latestTheme.id} - ${latestTheme.name}")
-            ThemeCard(
-                dynamicTheme = latestTheme,
-                onDelete = onDelete,
-                modifier = Modifier
-                    .padding(dimensionResource(R.dimen.padding_small))
-                    .fillMaxWidth()
-                    .clickable { navigateToDetail(latestTheme.id) }
-            )
-        }
-        if (dynamicThemeList.isEmpty()) {
+        Log.d(
+            APP_TAG, "HomeListScreen: latest theme ${latestTheme.id} - ${latestTheme.name}"
+        )
+        if (themeState.id != INVALID) {
+            item {
+                ThemeCard(dynamicTheme = latestTheme,
+                    onDelete = onDelete,
+                    modifier = Modifier
+                        .padding(dimensionResource(R.dimen.padding_small))
+                        .fillMaxWidth()
+                        .clickable { navigateToDetail(latestTheme.id) })
+            }
+        } else if (dynamicThemeList.isEmpty()) {
             item {
                 Text(
                     text = stringResource(R.string.no_dynamic_themes_description),
                     style = MaterialTheme.typography.titleLarge
                 )
             }
-        } else {
-            items(items = dynamicThemeList, key = { it.id }) { theme ->
-                if (theme.id != latestTheme.id) {
-                    Log.d(APP_TAG, "HomeListScreen: saved theme ${theme.id} - ${theme.name}")
-                    ThemeCard(
-                        dynamicTheme = theme,
-                        onDelete = onDelete,
-                        modifier = Modifier
-                            .padding(dimensionResource(R.dimen.padding_small))
-                            .fillMaxWidth()
-                            .clickable { navigateToDetail(theme.id) }
-                    )
-                }
+        }
+        items(items = dynamicThemeList, key = { it.id }) { theme ->
+            if (theme.id != latestTheme.id) {
+                Log.d(APP_TAG, "HomeListScreen: saved theme ${theme.id} - ${theme.name}")
+                ThemeCard(dynamicTheme = theme,
+                    onDelete = onDelete,
+                    modifier = Modifier
+                        .padding(dimensionResource(R.dimen.padding_small))
+                        .fillMaxWidth()
+                        .clickable { navigateToDetail(theme.id) })
             }
         }
+
     }
 }
 

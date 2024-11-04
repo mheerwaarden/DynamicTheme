@@ -39,6 +39,10 @@ private const val TAG = APP_TAG + "UserPreferencesRepo"
 class UserPreferencesDataStoreRepository(
     private val dataStore: DataStore<Preferences>,
 ) : UserPreferencesRepository {
+
+    // Set id to an invalid value and reset the other values to default
+    override suspend fun reset(): Preferences = saveIdPreference(INVALID)
+
     override suspend fun saveIdPreference(id: Long): Preferences = dataStore.edit { settings ->
         // Set id and reset the other values to default
         val defaultPreferences = UserPreferences()
@@ -48,8 +52,12 @@ class UserPreferencesDataStoreRepository(
         settings[COLOR_SCHEME_VARIANT] = defaultPreferences.dynamicSchemeVariant.ordinal
     }
 
-    override suspend fun saveNamePreference(name: String): Preferences =
-            dataStore.edit { settings -> settings[NAME] = name }
+    override suspend fun saveNamePreference(name: String): Preferences = dataStore.edit {
+        settings -> settings[NAME] = name
+        if (settings[ID] == null || settings[ID]!! == INVALID) {
+            settings[ID] = NOT_SAVED
+        }
+    }
 
     override suspend fun saveSourceColorPreference(
         color: Int,
@@ -57,6 +65,9 @@ class UserPreferencesDataStoreRepository(
     ): Preferences = dataStore.edit { settings ->
         settings[SOURCE_COLOR] = color
         settings[COLOR_SCHEME_VARIANT] = colorSchemeVariant.ordinal
+        if (settings[ID] == null || settings[ID]!! == INVALID) {
+            settings[ID] = NOT_SAVED
+        }
     }
 
     @OptIn(FlowPreview::class)

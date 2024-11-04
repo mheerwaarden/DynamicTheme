@@ -20,8 +20,11 @@ package com.github.mheerwaarden.dynamictheme.data.preferences
 import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
 import dynamiccolor.Variant
 
+const val INVALID = -1L
+const val NOT_SAVED = 0L
+
 data class UserPreferences(
-    val id: Long = 0L,
+    val id: Long = INVALID,
     val name: String = "",
     val sourceColor: Int = -0xbd7a0c, // Default to Google Blue
     val dynamicSchemeVariant: Variant = Variant.TONAL_SPOT,

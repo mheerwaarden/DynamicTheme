@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.Flow
 interface UserPreferencesRepository {
     val preferences: Flow<UserPreferences>
 
+    suspend fun reset(): Preferences
     suspend fun saveIdPreference(id: Long): Preferences
     suspend fun saveNamePreference(name: String): Preferences
     suspend fun saveSourceColorPreference(color: Int, colorSchemeVariant: Variant): Preferences
