@@ -24,29 +24,40 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Save
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
+import com.github.mheerwaarden.dynamictheme.ui.ActionResult
+import com.github.mheerwaarden.dynamictheme.ui.ActionResultState
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
+import com.github.mheerwaarden.dynamictheme.ui.ShowActionResult
 import com.github.mheerwaarden.dynamictheme.ui.component.InputField
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 
@@ -67,19 +78,31 @@ object DynamicThemeDetailDestination : NavigationDestination {
  */
 @Composable
 fun DynamicThemeDetailScreen(
+    // The preferences view model in which isHorizontalLayout is initialized
     themeViewModel: DynamicThemeViewModel,
     navigateHome: () -> Unit,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    // Extension of the DynamicThemeViewModel with ID, isHorizontalLayout not initialised
+    // Extension of the DynamicThemeViewModel with ID that is currently requested.
+    // However, isHorizontalLayout not initialised
     detailViewModel: DynamicThemeDetailViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
+    val context = LocalContext.current
+    val saveResult by detailViewModel.saveResult.collectAsStateWithLifecycle(
+        initialValue = ActionResult.None
+    )
+    val exportResult by detailViewModel.exportResult.collectAsStateWithLifecycle(
+        initialValue = ActionResult.None
+    )
     DynamicThemeDetailScreen(
         themeState = detailViewModel.uiState,
         isHorizontalLayout = themeViewModel.uiState.isHorizontalLayout(),
         isChanged = false,
+        saveResult = saveResult,
+        exportResult = exportResult,
         onNameChange = detailViewModel::updateName,
         onSave = detailViewModel::upsertDynamicTheme,
+        onExport = { detailViewModel.exportDynamicTheme(context = context) },
         navigateHome = navigateHome,
         navigateBack = navigateBack,
         modifier = modifier
@@ -94,13 +117,23 @@ fun LatestDetailScreen(
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     val themeState = themeViewModel.uiState
+    val saveResult by themeViewModel.saveResult.collectAsStateWithLifecycle(
+        initialValue = ActionResult.None
+    )
+    val exportResult by themeViewModel.exportResult.collectAsStateWithLifecycle(
+        initialValue = ActionResult.None
+    )
     DynamicThemeDetailScreen(
         themeState = themeState,
         isHorizontalLayout = themeState.isHorizontalLayout(),
         isChanged = true,
+        saveResult = saveResult,
+        exportResult = exportResult,
         onNameChange = themeViewModel::updateName,
         onSave = themeViewModel::upsertDynamicTheme,
+        onExport = { themeViewModel.exportDynamicTheme(context = context) },
         navigateHome = navigateHome,
         navigateBack = navigateBack,
         modifier = modifier
@@ -113,13 +146,31 @@ private fun DynamicThemeDetailScreen(
     themeState: DynamicThemeUiState,
     isHorizontalLayout: Boolean,
     isChanged: Boolean,
+    saveResult: ActionResultState,
+    exportResult: ActionResultState,
     onNameChange: (String) -> Unit,
     onSave: () -> Unit,
+    onExport: () -> Unit,
     navigateHome: () -> Unit,
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var mustSave by rememberSaveable { mutableStateOf(isChanged) }
+
+    // Update synchronously whenever the actionResult state changes
+    val isSaveBusy: Boolean by remember { derivedStateOf { saveResult is ActionResultState.Busy } }
+    val isExportBusy: Boolean by remember { derivedStateOf { exportResult is ActionResultState.Busy } }
+    // Handle final action result asynchronously
+    ShowActionResult(
+        action = stringResource(R.string.save),
+        actionResult = saveResult,
+        onSuccess = { mustSave = false }
+    )
+    ShowActionResult(
+        action = stringResource(R.string.export),
+        actionResult = exportResult,
+    )
+
     Scaffold(
         topBar = {
             DynamicThemeTopAppBar(
@@ -143,15 +194,15 @@ private fun DynamicThemeDetailScreen(
             ThemeDescription(
                 themeState = themeState,
                 mustSave = mustSave,
+                isSaveBusy = isSaveBusy,
+                isExportBusy = isExportBusy,
                 isHorizontalLayout = isHorizontalLayout,
                 onNameChange = {
                     onNameChange(it)
                     mustSave = true
                 },
-                onSave = {
-                    onSave()
-                    mustSave = false
-                },
+                onSave = onSave,
+                onExport = onExport,
                 modifier = Modifier.fillMaxWidth()
             )
             ThemeShowcaseScreen(
@@ -168,63 +219,62 @@ private fun DynamicThemeDetailScreen(
 private fun ThemeDescription(
     themeState: DynamicThemeUiState,
     mustSave: Boolean,
+    isSaveBusy: Boolean,
+    isExportBusy: Boolean,
     isHorizontalLayout: Boolean,
     onNameChange: (String) -> Unit,
     onSave: () -> Unit,
+    onExport: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (isHorizontalLayout) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = modifier
-        ) {
+    if (!isHorizontalLayout) {
+        ColorAndVariantChoice(
+            sourceArgb = themeState.sourceColorArgb,
+            colorSchemeVariant = stringResource(themeState.uiColorSchemeVariant.nameResId)
+        )
+    }
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        if (isHorizontalLayout) {
             ColorAndVariantChoice(
                 sourceArgb = themeState.sourceColorArgb,
                 colorSchemeVariant = stringResource(themeState.uiColorSchemeVariant.nameResId),
                 isSmall = false,
                 modifier = Modifier.weight(1f),
             )
-            InputField(
-                labelId = R.string.name,
-                value = themeState.name,
-                singleLine = true,
-                onValueChange = {
-                    onNameChange(it)
-                },
-                trailingIcon = {
-                    IconButton(onClick = onSave, enabled = mustSave) {
-                        Icon(
-                            imageVector = Icons.Outlined.Save,
-                            contentDescription = stringResource(R.string.save)
-                        )
-                    }
-                },
-                modifier = Modifier.weight(1f),
-            )
         }
-    } else {
-        ColorAndVariantChoice(
-            sourceArgb = themeState.sourceColorArgb,
-            colorSchemeVariant = stringResource(themeState.uiColorSchemeVariant.nameResId)
-        )
         InputField(
             labelId = R.string.name,
             value = themeState.name,
             singleLine = true,
-            onValueChange = {
-                onNameChange(it)
-            },
-            trailingIcon = {
-                IconButton(onClick = onSave, enabled = mustSave) {
-                    Icon(
-                        imageVector = Icons.Outlined.Save,
-                        contentDescription = stringResource(R.string.save)
-                    )
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
+            onValueChange = { onNameChange(it) },
+            modifier = Modifier.weight(1f),
         )
+        IconButton(onClick = onExport) {
+            if (isExportBusy) {
+                CircularProgressIndicator(modifier = Modifier.size(dimensionResource(R.dimen.icon_size)))
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.FileDownload,
+                    contentDescription = stringResource(R.string.export),
+                    modifier = Modifier.size(dimensionResource(R.dimen.icon_size))
+                )
+            }
+        }
+        IconButton(onClick = onSave, enabled = mustSave) {
+            if (isSaveBusy) {
+                CircularProgressIndicator(modifier = Modifier.size(dimensionResource(R.dimen.icon_size)))
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Save,
+                    contentDescription = stringResource(R.string.save),
+                    modifier = Modifier.size(dimensionResource(R.dimen.icon_size))
+                )
+            }
+        }
     }
 }
 
@@ -235,10 +285,14 @@ fun DetailScreenVerticalPreview() {
         themeState = DynamicThemeUiState(name = "Vertical preview"),
         isHorizontalLayout = false,
         isChanged = false,
+        saveResult = ActionResult.Busy,
+        exportResult = ActionResult.None,
         onNameChange = {},
         onSave = {},
+        onExport = {},
         navigateHome = {},
-        navigateBack = {})
+        navigateBack = {}
+    )
 }
 
 @Composable
@@ -252,8 +306,12 @@ fun DetailScreenHorizontalPreview() {
         themeState = DynamicThemeUiState(name = "Horizontal preview"),
         isHorizontalLayout = true,
         isChanged = false,
+        saveResult = ActionResult.None,
+        exportResult = ActionResult.None,
         onNameChange = {},
         onSave = {},
+        onExport = {},
         navigateHome = {},
-        navigateBack = {})
+        navigateBack = {}
+    )
 }

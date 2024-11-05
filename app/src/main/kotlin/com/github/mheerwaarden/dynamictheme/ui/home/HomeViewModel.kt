@@ -24,6 +24,7 @@ import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel.Companion.T
 import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -32,7 +33,11 @@ import kotlinx.coroutines.flow.stateIn
 class HomeViewModel(
     private val dynamicThemesRepository: DynamicThemeRepository,
 ) : LoadingViewModel() {
-    lateinit var homeState: StateFlow<List<DynamicTheme>>
+    var homeState: StateFlow<List<DynamicTheme>> = emptyFlow<List<DynamicTheme>>().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+        initialValue = listOf()
+    )
 
     override suspend fun loadState() {
         homeState =

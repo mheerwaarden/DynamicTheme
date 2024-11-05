@@ -17,31 +17,32 @@
 
 package com.github.mheerwaarden.dynamictheme.ui
 
+import android.content.Context
+import android.os.Environment
 import android.util.Log
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewModelScope
 import com.github.mheerwaarden.dynamictheme.APP_TAG
-import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicThemeRepository
 import com.github.mheerwaarden.dynamictheme.data.database.Id
-import com.github.mheerwaarden.dynamictheme.data.preferences.INVALID
 import com.github.mheerwaarden.dynamictheme.data.preferences.UserPreferencesRepository
-import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
+import com.github.mheerwaarden.dynamictheme.export.exportColorKotlin
+import com.github.mheerwaarden.dynamictheme.export.exportThemeKotlin
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState.Companion.createDynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState.Companion.fromDynamicTheme
 import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingViewModel
 import com.github.mheerwaarden.dynamictheme.ui.screen.UiColorSchemeVariant
-import com.github.mheerwaarden.dynamictheme.ui.theme.DarkColorScheme
-import com.github.mheerwaarden.dynamictheme.ui.theme.LightColorScheme
-import com.github.mheerwaarden.dynamictheme.ui.theme.WhiteArgb
+import com.github.mheerwaarden.dynamictheme.util.Zipper
 import dynamiccolor.Variant
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
+import kotlinx.coroutines.withContext
 
 private const val TAG = APP_TAG + "_DynamicThemeViewModel"
 
@@ -52,11 +53,22 @@ open class DynamicThemeViewModel(
     private val dynamicThemeRepository: DynamicThemeRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val isPreferenceState: Boolean = true,
-    var onException: (String) -> Unit = { _ -> },
 ) : LoadingViewModel() {
 
     var uiState by mutableStateOf(DynamicThemeUiState())
         protected set
+
+    private val _saveResult = MutableSharedFlow<ActionResultState>()
+    val saveResult = _saveResult.asSharedFlow()
+    private val _exportResult = MutableSharedFlow<ActionResultState>()
+    val exportResult = _exportResult.asSharedFlow()
+    private val _deleteResult = MutableSharedFlow<ActionResultState>()
+    val deleteResult = _deleteResult.asSharedFlow()
+
+    init {
+        _saveResult.tryEmit(ActionResult.None)
+        _exportResult.tryEmit(ActionResult.None)
+    }
 
     override suspend fun loadState() {
         Log.d(TAG, "loadState")
@@ -90,8 +102,7 @@ open class DynamicThemeViewModel(
     fun updateWindowSizeClass(newWindowSizeClass: WindowSizeClass) {
         // Update only after reconfiguration
         if (uiState.windowWidthSizeClass != newWindowSizeClass.widthSizeClass) {
-            uiState =
-                    uiState.copy(windowWidthSizeClass = newWindowSizeClass.widthSizeClass)
+            uiState = uiState.copy(windowWidthSizeClass = newWindowSizeClass.widthSizeClass)
         }
     }
 
@@ -114,9 +125,7 @@ open class DynamicThemeViewModel(
             windowWidthSizeClass = uiState.windowWidthSizeClass
         )
         if (isPreferenceState) {
-            setSourceColorPreference(
-                sourceColorArgb, uiColorSchemeVariant.toVariant()
-            )
+            setSourceColorPreference(sourceColorArgb, uiColorSchemeVariant.toVariant())
         }
     }
 
@@ -132,18 +141,18 @@ open class DynamicThemeViewModel(
     /** Insert the dynamicTheme in the database and schedule the alarm */
     private fun insertDynamicTheme() {
         viewModelScope.launch {
+            _saveResult.emit(ActionResult.Busy)
             try {
-                val newId =
-                        dynamicThemeRepository.insertDynamicTheme(uiState.toDynamicTheme())
+                val newId = dynamicThemeRepository.insertDynamicTheme(uiState.toDynamicTheme())
                 uiState = uiState.copy(id = newId)
                 if (isPreferenceState) {
                     setIdPreference(newId)
                 }
                 Log.d(TAG, "insertDynamicTheme: DynamicTheme added: $newId")
+                _saveResult.emit(ActionResult.Success)
             } catch (e: Exception) {
-                val msg = "addDynamicTheme: Exception during insert: ${e.message}"
-                Log.e(TAG, msg)
-                onException(msg)
+                Log.e(TAG, "addDynamicTheme: Exception during insert: ${e.message}")
+                _saveResult.emit(ActionResult.Failure(e))
             }
         }
     }
@@ -151,16 +160,17 @@ open class DynamicThemeViewModel(
     /** Update the dynamicTheme in the database. */
     private fun updateDynamicTheme() {
         viewModelScope.launch {
+            _saveResult.emit(ActionResult.Busy)
             try {
                 dynamicThemeRepository.updateDynamicTheme(uiState.toDynamicTheme())
                 Log.d(
                     TAG,
                     "updateDynamicTheme: DynamicTheme updated: " + "${uiState.id} - ${uiState.name}"
                 )
+                _saveResult.emit(ActionResult.Success)
             } catch (e: Exception) {
-                val msg = "updateDynamicTheme: Exception during insert: ${e.message}"
-                Log.e(TAG, msg)
-                onException(msg)
+                Log.e(TAG, "updateDynamicTheme: Exception during insert: ${e.message}")
+                _saveResult.emit(ActionResult.Failure(e))
             }
         }
     }
@@ -173,14 +183,16 @@ open class DynamicThemeViewModel(
         if (id < 0) return
 
         viewModelScope.launch {
+            _deleteResult.emit(DeleteResult.Busy(id))
             try {
                 dynamicThemeRepository.deleteDynamicThemeById(Id(id))
                 resetState()
                 Log.d(TAG, "deleteDynamicTheme: DynamicTheme deleted: $id")
+                _deleteResult.emit(DeleteResult.Success(id))
             } catch (e: Exception) {
-                val msg = "deleteDynamicTheme: Exception during delete: ${e.message}"
+                val msg = "deleteDynamicTheme: Exception during delete of theme $id: ${e.message}"
                 Log.e(TAG, msg)
-                onException(msg)
+                _deleteResult.emit(DeleteResult.Failure(id, e))
             }
         }
     }
@@ -222,80 +234,35 @@ open class DynamicThemeViewModel(
         }
     }
 
+    fun exportDynamicTheme(context: Context) {
+        viewModelScope.launch { withContext(Dispatchers.IO) {
+            try {
+                _exportResult.emit(ActionResult.Busy)
+
+                val name = uiState.name
+                val zipFileName = "${context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)}/${name}Theme.zip"
+                Log.d(TAG, "exportDynamicTheme: Exporting to $zipFileName")
+                Zipper(zipFileName).use { zipper ->
+                    zipper.add(
+                        fileName = "${name}Color.kt",
+                        data = exportColorKotlin(
+                            sourceColorArgb = uiState.sourceColorArgb,
+                            schemeVariant = uiState.uiColorSchemeVariant.toVariant()
+                        )
+                    )
+                    zipper.add(fileName = "${name}Theme.kt", data = exportThemeKotlin)
+                }
+                _exportResult.emit(ActionResult.Success)
+            } catch (e: Exception) {
+                val msg = "exportDynamicTheme: Exception during export: ${e.message}"
+                Log.e(TAG, msg)
+                _exportResult.emit(ActionResult.Failure(e))
+            }
+        }}
+    }
+
     companion object {
         const val TIMEOUT_MILLIS = 5_000L
     }
 }
 
-data class DynamicThemeUiState(
-    val id: Long = INVALID,
-    val name: String = "",
-    val sourceColorArgb: Int = WhiteArgb,
-    val uiColorSchemeVariant: UiColorSchemeVariant = UiColorSchemeVariant.TonalSpot,
-    val lightColorSchemeState: ColorSchemeState = LightColorScheme.toColorSchemeState(),
-    val darkColorSchemeState: ColorSchemeState = DarkColorScheme.toColorSchemeState(),
-
-    val windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact,
-) {
-
-    fun toDynamicTheme(): DynamicTheme = DynamicTheme(
-        id = if (id < 0) 0 else id,
-        name = name,
-        sourceArgb = sourceColorArgb,
-        colorSchemeVariant = uiColorSchemeVariant.toVariant(),
-        primaryArgb = lightColorSchemeState.primary,
-        onPrimaryArgb = lightColorSchemeState.onPrimary,
-        secondaryArgb = lightColorSchemeState.secondary,
-        onSecondaryArgb = lightColorSchemeState.onSecondary,
-        tertiaryArgb = lightColorSchemeState.tertiary,
-        onTertiaryArgb = lightColorSchemeState.onTertiary,
-        surfaceArgb = lightColorSchemeState.surface,
-        onSurfaceArgb = lightColorSchemeState.onSurface,
-        surfaceVariantArgb = lightColorSchemeState.surfaceVariant,
-        onSurfaceVariantArgb = lightColorSchemeState.onSurfaceVariant,
-        errorArgb = lightColorSchemeState.error,
-        onErrorArgb = lightColorSchemeState.onError,
-        timestamp = LocalDateTime.now()
-    )
-
-    fun isHorizontalLayout(): Boolean = windowWidthSizeClass != WindowWidthSizeClass.Compact
-
-    companion object {
-        fun fromDynamicTheme(
-            dynamicTheme: DynamicTheme,
-            windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact,
-        ): DynamicThemeUiState = createDynamicThemeUiState(
-            id = dynamicTheme.id,
-            name = dynamicTheme.name,
-            sourceColorArgb = dynamicTheme.sourceArgb,
-            uiColorSchemeVariant = UiColorSchemeVariant.fromVariant(dynamicTheme.colorSchemeVariant),
-            windowWidthSizeClass = windowWidthSizeClass
-        )
-
-        fun createDynamicThemeUiState(
-            sourceColorArgb: Int,
-            windowWidthSizeClass: WindowWidthSizeClass,
-            id: Long = 0L,
-            name: String = "",
-            uiColorSchemeVariant: UiColorSchemeVariant = UiColorSchemeVariant.TonalSpot,
-        ): DynamicThemeUiState {
-            Log.d(
-                TAG, "Create State: $id - $name Color $sourceColorArgb, Theme $uiColorSchemeVariant"
-            )
-            val schemeVariant = Variant.entries[uiColorSchemeVariant.ordinal]
-            return DynamicThemeUiState(
-                id = id,
-                name = name,
-                sourceColorArgb = sourceColorArgb,
-                uiColorSchemeVariant = uiColorSchemeVariant,
-                lightColorSchemeState = ColorExtractor.createDynamicColorScheme(
-                    sourceArgb = sourceColorArgb, schemeVariant = schemeVariant, isDark = false
-                ).toColorSchemeState(),
-                darkColorSchemeState = ColorExtractor.createDynamicColorScheme(
-                    sourceArgb = sourceColorArgb, schemeVariant = schemeVariant, isDark = true
-                ).toColorSchemeState(),
-                windowWidthSizeClass = windowWidthSizeClass
-            )
-        }
-    }
-}

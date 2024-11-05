@@ -42,7 +42,7 @@ class DynamicThemeApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        userPreferencesRepository = UserPreferencesDataStoreRepository(dataStore)
         container = AppDataContainer(this)
+        userPreferencesRepository = UserPreferencesDataStoreRepository(dataStore)
     }
 }

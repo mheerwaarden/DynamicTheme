@@ -42,15 +42,20 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.data.preferences.INVALID
+import com.github.mheerwaarden.dynamictheme.ui.ActionResult
+import com.github.mheerwaarden.dynamictheme.ui.ActionResultState
 import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
+import com.github.mheerwaarden.dynamictheme.ui.DeleteResult
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
+import com.github.mheerwaarden.dynamictheme.ui.ShowActionResult
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingScreen
 import com.github.mheerwaarden.dynamictheme.ui.screen.ThemeCard
@@ -98,9 +103,14 @@ fun HomeScreen(
         },
     ) { innerPadding ->
         LoadingScreen(loadingViewModel = homeViewModel, modifier = Modifier.padding(innerPadding)) {
+            val deleteResult by themeViewModel.deleteResult.collectAsStateWithLifecycle(
+                initialValue = DeleteResult.None
+            )
+
             val homeState by homeViewModel.homeState.collectAsState()
             HomeListScreen(
                 themeState = themeViewModel.uiState,
+                deleteResult = deleteResult,
                 dynamicThemeList = homeState,
                 onDelete = themeViewModel::deleteDynamicTheme,
                 navigateToDetail = navigateToDetail,
@@ -114,16 +124,22 @@ fun HomeScreen(
 @Composable
 private fun HomeListScreen(
     themeState: DynamicThemeUiState,
+    deleteResult: ActionResultState,
     dynamicThemeList: List<DynamicTheme>,
     onDelete: (Long) -> Unit,
     navigateToDetail: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    ShowActionResult(
+        action = stringResource(R.string.delete),
+        actionResult = deleteResult,
+    )
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
     ) {
+
         val latestTheme = dynamicThemeList.getTheme(themeState.id) ?: themeState.toDynamicTheme()
         Log.d(
             APP_TAG, "HomeListScreen: latest theme ${latestTheme.id} - ${latestTheme.name}"
@@ -175,6 +191,7 @@ fun HomeBodyPreview() {
     DynamicThemeAppTheme {
         HomeListScreen(
             themeState = DynamicThemeUiState(),
+            deleteResult = ActionResult.None,
             dynamicThemeList = emptyList(),
             onDelete = {},
             navigateToDetail = {},

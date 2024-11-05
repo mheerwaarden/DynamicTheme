@@ -24,6 +24,7 @@ import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import contrast.Contrast
+import dynamiccolor.ContrastCurve
 import dynamiccolor.DynamicScheme
 import dynamiccolor.Variant
 import hct.Hct
@@ -239,6 +240,20 @@ Conversions between color spaces (color_spaces.md)
 
 private const val QUATIZE_SIZE = 128
 
+/**
+ * See [ContrastCurve]:
+ * low    Value for contrast level -1.0
+ * normal Value for contrast level 0.0
+ * medium Value for contrast level 0.5
+ * high   Value for contrast level 1.0
+ */
+enum class ContrastLevel(val level:Double) {
+    Low(-1.0),
+    Normal(0.0),
+    Medium(0.5),
+    High(1.0)
+}
+
 object ColorExtractor {
 
     private val whiteArgb = Color.White.toArgb()
@@ -278,18 +293,19 @@ object ColorExtractor {
         sourceArgb: Int,
         schemeVariant: Variant,
         isDark: Boolean,
+        contrastLevel: ContrastLevel = ContrastLevel.Normal,
     ): DynamicScheme {
         val hct = Hct.fromInt(sourceArgb)
         return when (schemeVariant) {
-            Variant.CONTENT -> SchemeContent(hct, isDark, 0.0)
-            Variant.EXPRESSIVE -> SchemeExpressive(hct, isDark, 0.0)
-            Variant.FIDELITY -> SchemeFidelity(hct, isDark, 0.0)
-            Variant.FRUIT_SALAD -> SchemeFruitSalad(hct, isDark, 0.0)
-            Variant.MONOCHROME -> SchemeMonochrome(hct, isDark, 0.0)
-            Variant.NEUTRAL -> SchemeNeutral(hct, isDark, 0.0)
-            Variant.RAINBOW -> SchemeRainbow(hct, isDark, 0.0)
-            Variant.TONAL_SPOT -> SchemeTonalSpot(hct, isDark, 0.0)
-            Variant.VIBRANT -> SchemeVibrant(hct, isDark, 0.0)
+            Variant.CONTENT -> SchemeContent(hct, isDark, contrastLevel.level)
+            Variant.EXPRESSIVE -> SchemeExpressive(hct, isDark, contrastLevel.level)
+            Variant.FIDELITY -> SchemeFidelity(hct, isDark, contrastLevel.level)
+            Variant.FRUIT_SALAD -> SchemeFruitSalad(hct, isDark, contrastLevel.level)
+            Variant.MONOCHROME -> SchemeMonochrome(hct, isDark, contrastLevel.level)
+            Variant.NEUTRAL -> SchemeNeutral(hct, isDark, contrastLevel.level)
+            Variant.RAINBOW -> SchemeRainbow(hct, isDark, contrastLevel.level)
+            Variant.TONAL_SPOT -> SchemeTonalSpot(hct, isDark, contrastLevel.level)
+            Variant.VIBRANT -> SchemeVibrant(hct, isDark, contrastLevel.level)
         }
     }
 

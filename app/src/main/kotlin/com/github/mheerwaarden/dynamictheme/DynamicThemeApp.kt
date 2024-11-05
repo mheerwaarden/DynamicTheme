@@ -17,7 +17,6 @@
 
 package com.github.mheerwaarden.dynamictheme
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -32,7 +31,6 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
@@ -50,33 +48,20 @@ fun DynamicThemeApp(
     modifier: Modifier = Modifier,
     themeViewModel: DynamicThemeViewModel= viewModel(factory = AppViewModelProvider.Factory),
 ) {
-    val context = LocalContext.current
     LoadingScreen(loadingViewModel = themeViewModel, modifier = modifier) {
         // Prepare theme view model
         themeViewModel.updateWindowSizeClass(windowSizeClass)
-        themeViewModel.onException =
-                { msg -> Toast.makeText(context, msg, Toast.LENGTH_LONG).show() }
 
-        DynamicThemeAppScreen(
-            themeViewModel = themeViewModel,
-            modifier = modifier
-        )
-    }
-}
+        DynamicThemeAppTheme {
+            val navController = rememberNavController()
 
-@Composable
-fun DynamicThemeAppScreen(
-    themeViewModel: DynamicThemeViewModel,
-    modifier: Modifier = Modifier,
-) {
-    DynamicThemeAppTheme {
-        val navController = rememberNavController()
+            DynamicThemeNavHost(
+                navController = navController,
+                themeViewModel = themeViewModel,
+                modifier = modifier
+            )
+        }
 
-        DynamicThemeNavHost(
-            navController = navController,
-            themeViewModel = themeViewModel,
-            modifier = modifier
-        )
     }
 }
 
