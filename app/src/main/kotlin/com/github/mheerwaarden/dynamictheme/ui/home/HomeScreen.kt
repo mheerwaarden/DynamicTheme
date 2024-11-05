@@ -103,11 +103,11 @@ fun HomeScreen(
         },
     ) { innerPadding ->
         LoadingScreen(loadingViewModel = homeViewModel, modifier = Modifier.padding(innerPadding)) {
+            val homeState by homeViewModel.homeState.collectAsState()
             val deleteResult by themeViewModel.deleteResult.collectAsStateWithLifecycle(
                 initialValue = DeleteResult.None
             )
 
-            val homeState by homeViewModel.homeState.collectAsState()
             HomeListScreen(
                 themeState = themeViewModel.uiState,
                 deleteResult = deleteResult,
@@ -142,7 +142,7 @@ private fun HomeListScreen(
 
         val latestTheme = dynamicThemeList.getTheme(themeState.id) ?: themeState.toDynamicTheme()
         Log.d(
-            APP_TAG, "HomeListScreen: latest theme ${latestTheme.id} - ${latestTheme.name}"
+            APP_TAG, "HomeListScreen: latest theme ${latestTheme.id} - ${latestTheme.name} theme count ${dynamicThemeList.size}"
         )
         if (themeState.id != INVALID) {
             item {

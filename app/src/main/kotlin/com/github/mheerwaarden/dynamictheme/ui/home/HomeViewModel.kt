@@ -17,14 +17,15 @@
 
 package com.github.mheerwaarden.dynamictheme.ui.home
 
+import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicThemeRepository
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel.Companion.TIMEOUT_MILLIS
 import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.stateIn
 
 /**
@@ -33,13 +34,10 @@ import kotlinx.coroutines.flow.stateIn
 class HomeViewModel(
     private val dynamicThemesRepository: DynamicThemeRepository,
 ) : LoadingViewModel() {
-    var homeState: StateFlow<List<DynamicTheme>> = emptyFlow<List<DynamicTheme>>().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-        initialValue = listOf()
-    )
+    lateinit var homeState: StateFlow<List<DynamicTheme>>
 
     override suspend fun loadState() {
+        Log.d(APP_TAG, "HomeViewModel: loadState")
         homeState =
                 dynamicThemesRepository.getAllDynamicThemesStream().stateIn(
                     scope = viewModelScope,
