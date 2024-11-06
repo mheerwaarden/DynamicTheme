@@ -17,25 +17,18 @@
 
 <resources>
     <string name="app_name">Dynamic Theme</string>
-    <string name="menu">Menu</string>
     <string name="back_button">Back</string>
     <string name="theme_details">Theme details</string>
-    <string name="select_image">Select image</string>
-    <string name="selected_image">Selected image</string>
-    <string name="no_image_selected">No image selected</string>
-    <string name="image_picker">Image picker</string>
-    <string name="photo_picker">Photo picker</string>
-    <string name="browse">Browse</string>
-    <string name="palette_for_image">Palette for image</string>
+    <string name="selected_image">Selected image, tap to change</string>
+    <string name="no_image_selected">No image selected, tap to pick image</string>
+    <string name="browsing_image_picker">Browse to select image</string>
     <string name="vibrant">Vibrant</string>
     <string name="dark_muted">Dark Muted</string>
     <string name="dark_vibrant">Dark Vibrant</string>
     <string name="light_vibrant">Light Vibrant</string>
     <string name="light_muted">Light Muted</string>
     <string name="muted">Muted</string>
-    <string name="no_color">No %s color</string>
     <string name="color_extractor_for_image">Color extractor for image</string>
-    <string name="set_color_scheme">Set color scheme</string>
     <string name="first">First</string>
     <string name="second">Second</string>
     <string name="third">Third</string>
@@ -45,8 +38,6 @@
     <string name="on_color">On %s</string>
     <string name="collapse">Collapse</string>
     <string name="expand">Expand</string>
-    <string name="scheme_colors">Scheme Colors</string>
-    <string name="component_showcase">Component Showcase</string>
     <string name="color_scheme_variant_chooser">Color Scheme Variant Chooser</string>
     <string name="select_theme">Select theme</string>
     <string name="content">Content</string>
@@ -91,5 +82,4 @@
     <string name="delete">Delete</string>
     <string name="variant">Variant</string>
     <string name="export">Export</string>
-    <string name="theme_export_to">Theme export to %1$s</string>
 </resources>

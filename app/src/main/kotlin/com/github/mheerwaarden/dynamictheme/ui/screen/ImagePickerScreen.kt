@@ -121,7 +121,7 @@ fun ImagePickerScreen(
                 actions = {
                     Icon(
                         imageVector = Icons.Outlined.ImageSearch,
-                        contentDescription = stringResource(R.string.image_picker),
+                        contentDescription = stringResource(R.string.browsing_image_picker),
                         modifier = Modifier.clickable { browseImageLauncher.launch("image/*") }
                     )
                 },
