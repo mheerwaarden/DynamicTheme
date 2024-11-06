@@ -48,12 +48,16 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -524,6 +528,11 @@ fun ComponentShowcaseScreen() {
             .padding(dimensionResource(R.dimen.padding_small))
     ) {
         item {
+            Surface {
+                Text("Progress bar")
+            }
+        }
+        item {
             // Progress Bar
             LinearProgressIndicator(
                 modifier = Modifier
@@ -532,47 +541,61 @@ fun ComponentShowcaseScreen() {
             )
         }
         item {
-            // Buttons
-            Column {
-                Row {
-                    Button(onClick = { /* dummy */ }) { Text("Primary") }
-                    Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
-                    OutlinedButton(onClick = { /* dummy */ }) { Text("Outlined") }
-                }
-                Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
-                Row {
-                    FilledTonalButton(onClick = { /* dummy */ }) { Text("Filled Tonal") }
-                    Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
-                    TextButton(onClick = { /* dummy */ }) { Text("Text") }
-                }
-                Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
-                Row {
-                    IconButton(onClick = { /* dummy */ }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Save,
-                            contentDescription = stringResource(R.string.save),
-                        )
+            // Buttons on Card
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
+                ) {
+                    Text(text = "Button examples on Card")
+                    Row {
+                        Button(onClick = { /* dummy */ }) { Text("Primary") }
+                        Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
+                        OutlinedButton(onClick = { /* dummy */ }) { Text("Outlined") }
                     }
                     Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
-                    IconButton(onClick = { /* dummy */ }, enabled = false) {
-                        Icon(
-                            imageVector = Icons.Outlined.Save,
-                            contentDescription = stringResource(R.string.save),
-                        )
+                    Row {
+                        FilledTonalButton(onClick = { /* dummy */ }) { Text("Filled Tonal") }
+                        Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
+                        TextButton(onClick = { /* dummy */ }) { Text("Text") }
                     }
                     Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
-                    FilledIconButton(onClick = { /* dummy */ }) {
-                        Icon(
-                            imageVector = Icons.Filled.Save,
-                            contentDescription = stringResource(R.string.save),
-                        )
+                    Row {
+                        IconButton(onClick = { /* dummy */ }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Save,
+                                contentDescription = stringResource(R.string.save),
+                            )
+                        }
+                        Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
+                        IconButton(onClick = { /* dummy */ }, enabled = false) {
+                            Icon(
+                                imageVector = Icons.Outlined.Save,
+                                contentDescription = stringResource(R.string.save),
+                            )
+                        }
+                        Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
+                        FilledIconButton(onClick = { /* dummy */ }) {
+                            Icon(
+                                imageVector = Icons.Filled.Save,
+                                contentDescription = stringResource(R.string.save),
+                            )
+                        }
+                        Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
+                        FilledIconButton(onClick = { /* dummy */ }, enabled = false) {
+                            Icon(
+                                imageVector = Icons.Filled.Save,
+                                contentDescription = stringResource(R.string.save),
+                            )
+                        }
                     }
-                    Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
-                    FilledIconButton(onClick = { /* dummy */ }, enabled = false) {
-                        Icon(
-                            imageVector = Icons.Filled.Save,
-                            contentDescription = stringResource(R.string.save),
-                        )
+                    Row {
+                        RadioButton(selected = true, onClick = { /* dummy */ })
+                        Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
+                        RadioButton(selected = false, onClick = { /* dummy */ })
+                        Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
+                        Switch(checked = true, onCheckedChange = { /* dummy */ })
+                        Spacer(Modifier.width(dimensionResource(R.dimen.padding_small)))
+                        Switch(checked = false, onCheckedChange = { /* dummy */ })
                     }
                 }
             }
@@ -587,6 +610,12 @@ fun ComponentShowcaseScreen() {
             FloatingActionButton(onClick = { /* dummy */ }) {
                 Icon(Icons.Outlined.Add, contentDescription = null)
             }
+        }
+        item {
+            HorizontalDivider(
+                thickness = dimensionResource(R.dimen.padding_small),
+                modifier = Modifier.padding(dimensionResource(R.dimen.padding_medium))
+            )
         }
         item {
             InputField(
@@ -611,9 +640,6 @@ fun ComponentShowcaseScreen() {
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-
-        // TODO MH: ... add other components ...
-
     }
 }
 
