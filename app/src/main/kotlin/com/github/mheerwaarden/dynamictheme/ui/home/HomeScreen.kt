@@ -187,12 +187,27 @@ private fun List<DynamicTheme>.getTheme(id: Long): DynamicTheme? {
 
 @Preview(showBackground = true)
 @Composable
-fun HomeBodyPreview() {
+fun HomeBodyEmptyPreview() {
     DynamicThemeAppTheme {
         HomeListScreen(
             themeState = DynamicThemeUiState(),
             deleteResult = ActionResult.None,
             dynamicThemeList = emptyList(),
+            onDelete = {},
+            navigateToDetail = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomeBodyPreview() {
+    DynamicThemeAppTheme {
+        val themeState = DynamicThemeUiState(id = 1, name = "Preview")
+        HomeListScreen(
+            themeState = themeState,
+            deleteResult = ActionResult.None,
+            dynamicThemeList = listOf(themeState.toDynamicTheme()),
             onDelete = {},
             navigateToDetail = {},
         )

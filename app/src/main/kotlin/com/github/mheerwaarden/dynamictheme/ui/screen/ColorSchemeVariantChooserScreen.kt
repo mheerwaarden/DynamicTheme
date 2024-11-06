@@ -46,11 +46,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.mheerwaarden.dynamictheme.DynamicThemeTopAppBar
 import com.github.mheerwaarden.dynamictheme.R
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
-import com.github.mheerwaarden.dynamictheme.ui.AppViewModelProvider
+import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeUiState
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel
 import com.github.mheerwaarden.dynamictheme.ui.navigation.NavigationDestination
 
@@ -59,7 +58,6 @@ object ColorSchemeVariantDestination : NavigationDestination {
     override val titleRes = R.string.color_scheme_variant_chooser
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ColorSchemeVariantChooserScreen(
     themeViewModel: DynamicThemeViewModel,
@@ -67,8 +65,25 @@ fun ColorSchemeVariantChooserScreen(
     navigateBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    ColorSchemeVariantChooserScreen(
+        themeState = themeViewModel.uiState,
+        updateColorScheme = themeViewModel::updateColorScheme,
+        navigateToExamples = navigateToExamples,
+        navigateBack = navigateBack,
+        modifier = modifier
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun ColorSchemeVariantChooserScreen(
+    themeState: DynamicThemeUiState,
+    updateColorScheme: (Int, UiColorSchemeVariant) -> Unit,
+    navigateToExamples: () -> Unit,
+    navigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val isDarkTheme = isSystemInDarkTheme()
-    val themeState = themeViewModel.uiState
     val uiColorSchemeVariant = themeState.uiColorSchemeVariant
     val sourceColor = Color(themeState.sourceColorArgb)
     val onSourceColor = ColorExtractor.getContrastColor(sourceColor)
@@ -108,7 +123,7 @@ fun ColorSchemeVariantChooserScreen(
                         UiColorSchemeVariant.entries.forEach { entry ->
                             FilterChip(
                                 selected = uiColorSchemeVariant == entry,
-                                onClick = { themeViewModel.updateColorScheme(themeState.sourceColorArgb, entry) },
+                                onClick = { updateColorScheme(themeState.sourceColorArgb, entry) },
                                 label = { Text(stringResource(entry.nameResId)) },
                                 leadingIcon = if (uiColorSchemeVariant == entry) {
                                     {
@@ -151,7 +166,8 @@ fun ColorSchemeVariantChooserScreen(
 @Preview(showBackground = true)
 fun ThemeChooserScreenPreview() {
     ColorSchemeVariantChooserScreen(
-        themeViewModel = viewModel(factory = AppViewModelProvider.Factory),
+        themeState = DynamicThemeUiState(),
+        updateColorScheme = { _, _ -> },
         navigateToExamples = {},
         navigateBack = {}
     )

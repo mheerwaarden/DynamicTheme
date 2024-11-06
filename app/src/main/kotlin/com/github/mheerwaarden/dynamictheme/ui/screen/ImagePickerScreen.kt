@@ -314,10 +314,11 @@ private fun Int.hexString(): String = String.format("#%06X", (0xFFFFFF and this)
 @Composable
 fun ImagePickerScreenPreview() {
     DynamicThemeAppTheme {
-        ImagePickerScreen(
-            themeViewModel = viewModel(factory = AppViewModelProvider.Factory),
-            navigateToThemeChooser = {},
-            navigateBack = {}
+        ImagePickerBody(
+            imageState = getImagePickerPreviewState(),
+            isHorizontalLayout = false,
+            onSelectImage = {},
+            onSelectColor = {}
         )
     }
 }
@@ -325,13 +326,17 @@ fun ImagePickerScreenPreview() {
 @Preview(showBackground = true)
 @Composable
 fun SwatchesPreview() {
+     Swatches(uiState = getImagePickerPreviewState(), onSelectColor = {})
+}
+
+private fun getImagePickerPreviewState(): ImagePickerUiState {
     val white = WhiteArgb
     val black = BlackArgb
     val blue = Color.Blue.toArgb()
     val red = Color.Red.toArgb()
     val green = Color.Green.toArgb()
     val yellow = Color.Yellow.toArgb()
-    val uiState = ImagePickerUiState(
+    return ImagePickerUiState(
         paletteSwatches = listOf(
             UiSwatch(R.string.vibrant, blue, white, white),
             UiSwatch(R.string.dark_vibrant, red, white, white)
@@ -341,6 +346,5 @@ fun SwatchesPreview() {
             UiSwatch(R.string.second, yellow, black, black)
         )
     )
-    Swatches(uiState = uiState, onSelectColor = {})
 }
 
