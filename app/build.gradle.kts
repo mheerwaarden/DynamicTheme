@@ -58,17 +58,17 @@ android {
 }
 
 composeCompiler {
+    // To mark classes or packages as stable, you can add them in the stability configuration file.
+    // See https://developer.android.com/develop/ui/compose/performance/stability/fix#configuration-file
+    // Currently enabling strong skipping mode for the whole package.
     // Strong skipping mode allows composables with unstable parameters to be skipped
-    enableStrongSkippingMode = true
+    stabilityConfigurationFile = rootProject.layout.projectDirectory.file("stability_config.conf")
 
     // Compiler output results of its stability inference for inspection
     // See https://developer.android.com/develop/ui/compose/performance/stability/diagnose
     reportsDestination = layout.buildDirectory.dir("compose_compiler")
     metricsDestination = layout.buildDirectory.dir("compose_compiler")
 
-    // To mark classes or packages as stable, you can add them in the stability configuration file.
-    // See https://developer.android.com/develop/ui/compose/performance/stability/fix#configuration-file
-    // stabilityConfigurationFile = rootProject.layout.projectDirectory.file("stability_config.conf")
 }
 
 dependencies {
