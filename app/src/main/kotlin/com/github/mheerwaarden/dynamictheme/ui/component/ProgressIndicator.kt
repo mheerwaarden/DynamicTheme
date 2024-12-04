@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.github.mheerwaarden.dynamictheme.ui
+package com.github.mheerwaarden.dynamictheme.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement

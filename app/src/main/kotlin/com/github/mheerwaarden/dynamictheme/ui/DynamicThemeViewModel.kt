@@ -239,6 +239,7 @@ open class DynamicThemeViewModel(
             try {
                 _exportResult.emit(ActionResult.Busy)
 
+                // Environment documentation: https://developer.android.com/reference/android/os/Environment#getExternalStoragePublicDirectory(java.lang.String)
                 val name = uiState.name
                 val zipFileName = "${context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)}/${name}Theme.zip"
                 Log.d(TAG, "exportDynamicTheme: Exporting to $zipFileName")

@@ -44,7 +44,6 @@ class HomeViewModel(
                     started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
                     initialValue = listOf()
                 )
-
     }
 
 }

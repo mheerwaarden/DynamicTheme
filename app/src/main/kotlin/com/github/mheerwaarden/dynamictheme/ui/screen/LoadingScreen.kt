@@ -36,7 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.mheerwaarden.dynamictheme.APP_TAG
 import com.github.mheerwaarden.dynamictheme.R
-import com.github.mheerwaarden.dynamictheme.ui.ProgressIndicator
+import com.github.mheerwaarden.dynamictheme.ui.component.ProgressIndicator
 
 @Composable
 fun LoadingScreen(
