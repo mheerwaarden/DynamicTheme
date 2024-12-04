@@ -109,6 +109,7 @@ fun getColorScheme(
         "val onSurface$colorNamePostfix = Color(${scheme.onSurface})",
         "val surfaceVariant$colorNamePostfix = Color(${scheme.surfaceVariant})",
         "val onSurfaceVariant$colorNamePostfix = Color(${scheme.onSurfaceVariant})",
+        "val surfaceTint$colorNamePostfix = Color(${scheme.surfaceTint})",
         "val outline$colorNamePostfix = Color(${scheme.outline})",
         "val outlineVariant$colorNamePostfix = Color(${scheme.outlineVariant})",
         "val scrim$colorNamePostfix = Color(${scheme.scrim})",
