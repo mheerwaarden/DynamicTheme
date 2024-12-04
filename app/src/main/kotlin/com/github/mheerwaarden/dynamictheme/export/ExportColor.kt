@@ -17,11 +17,14 @@
 
 package com.github.mheerwaarden.dynamictheme.export
 
+import androidx.compose.ui.text.decapitalize
+import androidx.compose.ui.text.intl.Locale
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ColorExtractor
 import com.github.mheerwaarden.dynamictheme.material.color.utils.ContrastLevel
 import dynamiccolor.Variant
+import palettes.TonalPalette
 
-fun exportColorKotlin(sourceColorArgb: Int, schemeVariant: Variant): List<String> {
+fun exportColorKotlin(name: String, sourceColorArgb: Int, schemeVariant: Variant): List<String> {
     val result = mutableListOf(
         "package com.example.dynamictheme",
         "",
@@ -29,56 +32,56 @@ fun exportColorKotlin(sourceColorArgb: Int, schemeVariant: Variant): List<String
         "",
     )
     result.addAll(getColorScheme(
+        objectName = "${name}Light",
         sourceColorArgb = sourceColorArgb,
         schemeVariant = schemeVariant,
         isDark = false,
-        contrastLevel = ContrastLevel.Normal,
-        colorNamePostfix = "Light"
+        contrastLevel = ContrastLevel.Normal
     ))
     result.addAll(getColorScheme(
+        objectName = "${name}LightMediumContrast",
         sourceColorArgb = sourceColorArgb,
         schemeVariant = schemeVariant,
         isDark = false,
-        contrastLevel = ContrastLevel.Medium,
-        colorNamePostfix = "LightMediumContrast"
+        contrastLevel = ContrastLevel.Medium
     ))
     result.addAll(getColorScheme(
+        objectName = "${name}LightHighContrast",
         sourceColorArgb = sourceColorArgb,
         schemeVariant = schemeVariant,
         isDark = false,
-        contrastLevel = ContrastLevel.High,
-        colorNamePostfix = "LightHighContrast"
+        contrastLevel = ContrastLevel.High
     ))
     result.addAll(getColorScheme(
+        objectName = "${name}Dark",
         sourceColorArgb = sourceColorArgb,
         schemeVariant = schemeVariant,
         isDark = true,
-        contrastLevel = ContrastLevel.Normal,
-        colorNamePostfix = "Dark"
+        contrastLevel = ContrastLevel.Normal
     ))
     result.addAll(getColorScheme(
+        objectName = "${name}DarkMediumContrast",
         sourceColorArgb = sourceColorArgb,
         schemeVariant = schemeVariant,
         isDark = true,
-        contrastLevel = ContrastLevel.Medium,
-        colorNamePostfix = "DarkMediumContrast"
+        contrastLevel = ContrastLevel.Medium
     ))
     result.addAll(getColorScheme(
+        objectName = "${name}DarkHighContrast",
         sourceColorArgb = sourceColorArgb,
         schemeVariant = schemeVariant,
         isDark = true,
-        contrastLevel = ContrastLevel.High,
-        colorNamePostfix = "DarkHighContrast"
+        contrastLevel = ContrastLevel.High
     ))
     return result
 }
 
 fun getColorScheme(
+    objectName: String,
     sourceColorArgb: Int,
     schemeVariant: Variant,
     isDark: Boolean,
     contrastLevel: ContrastLevel,
-    colorNamePostfix: String,
 ): List<String> {
     val scheme = ColorExtractor.createDynamicColorScheme(
         sourceArgb = sourceColorArgb,
@@ -86,43 +89,54 @@ fun getColorScheme(
         isDark = isDark,
         contrastLevel = contrastLevel
     )
-    return listOf(
-        "val primary$colorNamePostfix = Color(${scheme.primary})",
-        "val onPrimary$colorNamePostfix = Color(${scheme.onPrimary})",
-        "val primaryContainer$colorNamePostfix = Color(${scheme.primaryContainer})",
-        "val onPrimaryContainer$colorNamePostfix = Color(${scheme.onPrimaryContainer})",
-        "val secondary$colorNamePostfix = Color(${scheme.secondary})",
-        "val onSecondary$colorNamePostfix = Color(${scheme.onSecondary})",
-        "val secondaryContainer$colorNamePostfix = Color(${scheme.secondaryContainer})",
-        "val onSecondaryContainer$colorNamePostfix = Color(${scheme.onSecondaryContainer})",
-        "val tertiary$colorNamePostfix = Color(${scheme.tertiary})",
-        "val onTertiary$colorNamePostfix = Color(${scheme.onTertiary})",
-        "val tertiaryContainer$colorNamePostfix = Color(${scheme.tertiaryContainer})",
-        "val onTertiaryContainer$colorNamePostfix = Color(${scheme.onTertiaryContainer})",
-        "val error$colorNamePostfix = Color(${scheme.error})",
-        "val onError$colorNamePostfix = Color(${scheme.onError})",
-        "val errorContainer$colorNamePostfix = Color(${scheme.errorContainer})",
-        "val onErrorContainer$colorNamePostfix = Color(${scheme.onErrorContainer})",
-        "val background$colorNamePostfix = Color(${scheme.background})",
-        "val onBackground$colorNamePostfix = Color(${scheme.onBackground})",
-        "val surface$colorNamePostfix = Color(${scheme.surface})",
-        "val onSurface$colorNamePostfix = Color(${scheme.onSurface})",
-        "val surfaceVariant$colorNamePostfix = Color(${scheme.surfaceVariant})",
-        "val onSurfaceVariant$colorNamePostfix = Color(${scheme.onSurfaceVariant})",
-        "val surfaceTint$colorNamePostfix = Color(${scheme.surfaceTint})",
-        "val outline$colorNamePostfix = Color(${scheme.outline})",
-        "val outlineVariant$colorNamePostfix = Color(${scheme.outlineVariant})",
-        "val scrim$colorNamePostfix = Color(${scheme.scrim})",
-        "val inverseSurface$colorNamePostfix = Color(${scheme.inverseSurface})",
-        "val inverseOnSurface$colorNamePostfix = Color(${scheme.inverseOnSurface})",
-        "val inversePrimary$colorNamePostfix = Color(${scheme.inversePrimary})",
-        "val surfaceDim$colorNamePostfix = Color(${scheme.surfaceDim})",
-        "val surfaceBright$colorNamePostfix = Color(${scheme.surfaceBright})",
-        "val surfaceContainerLowest$colorNamePostfix = Color(${scheme.surfaceContainerLowest})",
-        "val surfaceContainerLow$colorNamePostfix = Color(${scheme.surfaceContainerLow})",
-        "val surfaceContainer$colorNamePostfix = Color(${scheme.surfaceContainer})",
-        "val surfaceContainerHigh$colorNamePostfix = Color(${scheme.surfaceContainerHigh})",
-        "val surfaceContainerHighest$colorNamePostfix = Color(${scheme.surfaceContainerHighest})",
+    val palette = TonalPalette.fromInt(scheme.primary)
+    val result = mutableListOf(
+        "val ${objectName.decapitalize(Locale.current)}ColorScheme by lazy { ColorScheme(",
+        "    primary = Color(${scheme.primary})",
+        "    onPrimary = Color(${scheme.onPrimary})",
+        "    primaryContainer = Color(${scheme.primaryContainer})",
+        "    onPrimaryContainer = Color(${scheme.onPrimaryContainer})",
+        "    secondary = Color(${scheme.secondary})",
+        "    onSecondary = Color(${scheme.onSecondary})",
+        "    secondaryContainer = Color(${scheme.secondaryContainer})",
+        "    onSecondaryContainer = Color(${scheme.onSecondaryContainer})",
+        "    tertiary = Color(${scheme.tertiary})",
+        "    onTertiary = Color(${scheme.onTertiary})",
+        "    tertiaryContainer = Color(${scheme.tertiaryContainer})",
+        "    onTertiaryContainer = Color(${scheme.onTertiaryContainer})",
+        "    error = Color(${scheme.error})",
+        "    onError = Color(${scheme.onError})",
+        "    errorContainer = Color(${scheme.errorContainer})",
+        "    onErrorContainer = Color(${scheme.onErrorContainer})",
+        "    background = Color(${scheme.background})",
+        "    onBackground = Color(${scheme.onBackground})",
+        "    surface = Color(${scheme.surface})",
+        "    onSurface = Color(${scheme.onSurface})",
+        "    surfaceVariant = Color(${scheme.surfaceVariant})",
+        "    onSurfaceVariant = Color(${scheme.onSurfaceVariant})",
+        "    surfaceTint = Color(${scheme.surfaceTint})",
+        "    outline = Color(${scheme.outline})",
+        "    outlineVariant = Color(${scheme.outlineVariant})",
+        "    scrim = Color(${scheme.scrim})",
+        "    inverseSurface = Color(${scheme.inverseSurface})",
+        "    inverseOnSurface = Color(${scheme.inverseOnSurface})",
+        "    inversePrimary = Color(${scheme.inversePrimary})",
+        "    surfaceDim = Color(${scheme.surfaceDim})",
+        "    surfaceBright = Color(${scheme.surfaceBright})",
+        "    surfaceContainerLowest = Color(${scheme.surfaceContainerLowest})",
+        "    surfaceContainerLow = Color(${scheme.surfaceContainerLow})",
+        "    surfaceContainer = Color(${scheme.surfaceContainer})",
+        "    surfaceContainerHigh = Color(${scheme.surfaceContainerHigh})",
+        "    surfaceContainerHighest = Color(${scheme.surfaceContainerHighest})",
+        ")}",
         "",
+        "object ${objectName}Palette {",
     )
+    for (tone in 100 downTo 0 step 5) {
+        val color = palette.tone(tone)
+        result.add("    val Primary$tone by lazy { Color(${color}) }")
+    }
+    result.add("}")
+    result.add("")
+    return result
 }

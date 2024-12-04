@@ -247,6 +247,7 @@ open class DynamicThemeViewModel(
                     zipper.add(
                         fileName = "${name}Color.kt",
                         data = exportColorKotlin(
+                            name = name,
                             sourceColorArgb = uiState.sourceColorArgb,
                             schemeVariant = uiState.uiColorSchemeVariant.toVariant()
                         )

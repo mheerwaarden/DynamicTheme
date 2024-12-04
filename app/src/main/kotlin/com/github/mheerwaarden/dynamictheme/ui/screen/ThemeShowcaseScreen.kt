@@ -114,16 +114,17 @@ fun ThemeShowcaseScreen(
 ) {
     DynamicMaterialTheme(colorScheme = lightColorSchemeState.toColorScheme()) {
         ExpandableSections(
-            sections = listOf(stringResource(R.string.light_scheme) to {
-                ColorSchemeShowcaseScreen(isHorizontalLayout)
-            },
+            sections = listOf(
+                stringResource(R.string.light_scheme) to { ColorSchemeShowcaseScreen(isHorizontalLayout) },
                 stringResource(R.string.dark_scheme) to {
                     DarkColorSchemeShowcaseScreen(darkColorSchemeState, isHorizontalLayout)
                 },
                 stringResource(R.string.components) to { ComponentShowcaseScreen() },
                 stringResource(R.string.tonal_palettes) to {
                     TonalPaletteShowcaseScreen(isHorizontalLayout)
-                }), modifier = modifier.fillMaxSize()
+                }
+            ),
+            modifier = modifier.fillMaxSize()
         )
     }
 }
@@ -503,11 +504,7 @@ private fun ColorBox(
 ) {
     Box(
         modifier
-            .height(
-                height = dimensionResource(
-                    if (isSmall) R.dimen.colorbox_small_height else R.dimen.colorbox_height
-                )
-            )
+            .height(height = dimensionResource(if (isSmall) R.dimen.colorbox_small_height else R.dimen.colorbox_height))
             .background(backgroundColor)
             .padding(dimensionResource(R.dimen.padding_very_small))
     ) {

@@ -236,6 +236,13 @@ Conversions between color spaces (color_spaces.md)
     • linRGB → sRGB
         ◦ ColorUtils.argbFromLinrgb(linrgb)
 
+
+ Default color scheme values
+ ---------------------------
+ The default color scheme values are taken from the tonal palettes. The values can be found in:
+ androidx.compose.material3.tokens.ColorLightTokens
+ androidx.compose.material3.tokens.ColorDarkTokens
+
 */
 
 private const val QUATIZE_SIZE = 128

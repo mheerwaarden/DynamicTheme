@@ -24,6 +24,7 @@ import com.github.mheerwaarden.dynamictheme.data.database.DynamicTheme
 import com.github.mheerwaarden.dynamictheme.data.database.DynamicThemeRepository
 import com.github.mheerwaarden.dynamictheme.ui.DynamicThemeViewModel.Companion.TIMEOUT_MILLIS
 import com.github.mheerwaarden.dynamictheme.ui.screen.LoadingViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -34,7 +35,7 @@ import kotlinx.coroutines.flow.stateIn
 class HomeViewModel(
     private val dynamicThemesRepository: DynamicThemeRepository,
 ) : LoadingViewModel() {
-    lateinit var homeState: StateFlow<List<DynamicTheme>>
+    var homeState: StateFlow<List<DynamicTheme>> = MutableStateFlow(listOf())
 
     override suspend fun loadState() {
         Log.d(APP_TAG, "HomeViewModel: loadState")
